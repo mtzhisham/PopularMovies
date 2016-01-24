@@ -5,12 +5,15 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
@@ -36,8 +39,10 @@ public class DetailActivityFragment extends Fragment {
 
     ArrayList<TrailerObject> trailerObjects = new ArrayList<>();
     ArrayList<ReviewObject> reviewObjects = new ArrayList<>();
+    ListView listView;
     TextView videoName;
     TextView review;
+    ArrayAdapter mVideosAdapter;
     ArrayAdapter<String> itemsAdapter;
     public DetailActivityFragment() {
     }
@@ -61,11 +66,15 @@ public class DetailActivityFragment extends Fragment {
                 TextView titleTextView = (TextView) rootView.findViewById(R.id.title_textView);
                 titleTextView.setText(b.getString("MOVIE_TITLE"));
 
+                listView = (ListView) rootView.findViewById(R.id.listview_videos);
+                mVideosAdapter =
+                        new ArrayAdapter<String>(getActivity(), R.layout.video_list_item, R.id.list_item_video_textview, new ArrayList<String>());
+                listView.setAdapter(mVideosAdapter);
 
 
-
-                videoName = (TextView) rootView.findViewById(R.id.videoLink_tv);
+//                videoName = (TextView) rootView.findViewById(R.id.videoLink_tv);
                 review = (TextView) rootView.findViewById(R.id.review_textView);
+                review.setMovementMethod(new ScrollingMovementMethod());
 
                 TextView overviewTextView = (TextView) rootView.findViewById(R.id.overview_textView);
                 overviewTextView.setText(b.getString("MOVIE_OVERVIEW"));
@@ -80,7 +89,7 @@ public class DetailActivityFragment extends Fragment {
 
                 Picasso.with(getActivity()) //
                         .load(b.getString("MOVIE_POSTER")) //
-                        .placeholder(R.drawable.placeholder) //
+                         //
                         .error(R.drawable.error) //
                         .fit() //
                         .tag(getActivity()) //
@@ -193,6 +202,7 @@ public class DetailActivityFragment extends Fragment {
         protected void onPostExecute(String result) {
             Intent tr = new Intent();
 
+
             try {
 
 
@@ -200,29 +210,33 @@ public class DetailActivityFragment extends Fragment {
                     ArrayList<TrailerObject> trailerObjects = new ArrayList<>();
                     trailerObjects.addAll(getTrailerDataFromJson(result));
                     int trailerCount = trailerObjects.size();
+                    final ArrayList<TrailerObject> videoArray= new ArrayList<>();
+                    ArrayList<String> videoNAme = new ArrayList<>();
 
-
-                    String videokey = "";
-
-                    for (int i = 0; i < 1; i++) {
+                    if ( videoArray.isEmpty()){
+                    for (int i = 0; i < trailerCount; i++) {
                         Log.d("from TRAILER OBJECT", trailerObjects.get(i).name + trailerObjects.get(i).key);
 
-                        videoName.setText(trailerObjects.get(i).name);
-                       videokey = trailerObjects.get(i).key;
-                    }
+//                        videoName.setText(trailerObjects.get(i).name);
+//                       videokey = trailerObjects.get(i).key;
+                       videoArray.add(trailerObjects.get(i));
+                        videoNAme.add(videoArray.get(i).name);
+                    }}
+                    mVideosAdapter.clear();
+                    mVideosAdapter.addAll(videoNAme);
 
-                    final String urlStr = "http://www.youtube.com/watch?v="+videokey;
 
-                    videoName.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-
-                            Intent intent = new Intent(Intent.ACTION_VIEW);
-                            intent.setData(Uri.parse(urlStr));
+       listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+           @Override
+           public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+               String videokey = videoArray.get(position).getKey(position);
+               final String urlStr = "http://www.youtube.com/watch?v="+videokey;
+               Intent intent = new Intent(Intent.ACTION_VIEW);
+               intent.setData(Uri.parse(urlStr));
                             startActivity(intent);
+           }
+       });
 
-                        }
-                    });
 
 
                 }
@@ -234,7 +248,7 @@ public class DetailActivityFragment extends Fragment {
                     for (int i = 0; i < reviewCount; i++) {
                         Log.d("from TRAILER OBJECT", reviewObjects.get(i).author + reviewObjects.get(i).review);
 
-                        review.setText("Author"+reviewObjects.get(i).author+": "+ reviewObjects.get(i).review);
+                        review.setText("Author: "+reviewObjects.get(i).author+": "+ reviewObjects.get(i).review);
                     }
                 }
 
@@ -263,7 +277,8 @@ public class DetailActivityFragment extends Fragment {
             ArrayList<ReviewObject> arrayOfReviews = new ArrayList<>();
             Log.d("TASK trailer", trailerJson.toString());
             int numberOfTrailers = trailerArray.length();
-            Log.d("TASK num videos",String.valueOf(numberOfTrailers) );
+
+            Log.d("TASK num videos thione",String.valueOf(numberOfTrailers) );
 
             if(returnTybe == "videos"){
                 for (int i = 0; i < numberOfTrailers; i++) {

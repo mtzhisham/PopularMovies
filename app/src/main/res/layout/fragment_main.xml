@@ -13,7 +13,9 @@
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:columnWidth="250dp"
+        android:columnWidth="185dp"
+        android:minHeight="278dp"
+
         android:numColumns="auto_fit"
         android:verticalSpacing="0dp"
         android:horizontalSpacing="0dp"

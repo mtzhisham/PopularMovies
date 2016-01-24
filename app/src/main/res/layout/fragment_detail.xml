@@ -69,18 +69,31 @@
 
             android:id="@+id/overview_textView" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:paddingTop="16dp"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:id="@+id/videoLink_tv" />
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ListView
+                android:paddingTop="16dp"
+                android:id="@+id/listview_videos"
+                android:layout_width="match_parent"
+                android:layout_height="130dp" />
+        </FrameLayout>
+
+
+
+
 
         <TextView
+            android:paddingTop="26dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
 
-            android:id="@+id/review_textView" />
+            android:id="@+id/review_textView"
+            android:maxLines = "9"
+
+            android:scrollbars = "vertical"/>
 
     </LinearLayout>
 </ScrollView>

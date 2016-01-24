@@ -25,7 +25,7 @@ public MovieObject(){
         this.id = movieId;
         this.title = movieTitle;
         this.overview = movieOverview;
-        this.posterPath="http://image.tmdb.org/t/p/w342/"+moviePosterPath;
+        this.posterPath="http://image.tmdb.org/t/p/w185/"+moviePosterPath;
         this.rating=movieRating;
         this.releaseDate = movieReleaseDate;
 
