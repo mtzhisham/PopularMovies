@@ -16,7 +16,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.GridView;
-import android.widget.Toast;
 
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
@@ -38,7 +37,7 @@ import javax.net.ssl.HttpsURLConnection;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class MainActivityFragment extends Fragment  {
+public class MainFragment extends Fragment  {
 
 
     //    String[] moviesPosters = new String[20];
@@ -56,6 +55,9 @@ public class MainActivityFragment extends Fragment  {
     String defaultUserCount = "";
     String userCount="vote_count.desc";
     String SelectedCount=defaultUserCount;
+
+
+
 /**
  +     * A callback interface that all activities containing this fragment must
  +     * implement. This mechanism allows activities to be notified of item
@@ -69,7 +71,7 @@ public class MainActivityFragment extends Fragment  {
             }
 
 
-    public MainActivityFragment() {
+    public MainFragment() {
     }
     @Override
     public void onSaveInstanceState(Bundle outState) {
@@ -164,7 +166,7 @@ public class MainActivityFragment extends Fragment  {
         customMoviesAdapter = new CustomMoviesAdapter(getContext(),new ArrayList<String>());
         gv = (GridView) rootView.findViewById(R.id.movies_grid);
         gv.setAdapter(customMoviesAdapter);
-        gv.setSelection(1);
+
 
 
 
@@ -224,8 +226,8 @@ public class MainActivityFragment extends Fragment  {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
                 int index = (int) id;
-                Integer movieID = movieObjects.get(index).id;
-                String trailer = movieID.toString();
+                String movieID = String.valueOf(movieObjects.get(index).id) ;
+
 
 
 
@@ -236,21 +238,27 @@ public class MainActivityFragment extends Fragment  {
                 String imageURL = movieObjects.get(index).posterPath;
 
                 Intent intent = new Intent(getActivity(),DetailActivity.class);
-                intent.putExtra("MOVIE_RELEASE_DATE",release);
-                intent.putExtra("MOVIE_TITLE",title);
-                intent.putExtra("MOVIE_OVERVIEW", overview);
-                intent.putExtra("MOVIE_RATING", rating);
-                intent.putExtra("MOVIE_POSTER", imageURL);
-                intent.putExtra("TRAILER",trailer);
 
+                Log.d("json before", "before json");
+                JSONObject json = new JSONObject();
+                try {
+                    json.put("movieID", movieID);
+                    json.put("title", title);
+                    json.put("release", release);
+                    json.put("overview", overview);
+                    json.put("rating", rating);
+                    json.put("imageURL", imageURL);
+                    intent.putExtra("json", json.toString());
+                }catch (JSONException e){
+                    e.printStackTrace();
+                }
 
-// CursorAdapter returns a cursor at the correct position for getItem(), or null
-                // if it cannot seek to that position.
+//                json.put("uniqueArrays", new JSONArray(items));
+//                String arrayList = json.toString();
 
-
-
+Log.d("the pressed string", json.toString());
                 startActivity(intent);
-                Toast.makeText(getActivity(), "movie id" + movieID, Toast.LENGTH_SHORT).show();
+
 
 
             }

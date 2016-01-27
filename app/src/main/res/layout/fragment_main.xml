@@ -5,6 +5,7 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:fitsSystemWindows="true"
+    android:background="@color/backgrounddark"
     tools:context="com.example.moataz.popularmovies.MainActivity">
 
     <GridView
@@ -21,7 +22,7 @@
         android:horizontalSpacing="0dp"
         android:stretchMode="columnWidth"
         android:id="@+id/movies_grid"
-        tools:context="com.example.moataz.popularmovies.MainActivityFragment"
+        tools:context=".MainFragment"
         tools:showIn="@layout/activity_main">
 
     </GridView>

@@ -1,10 +1,14 @@
 package com.example.moataz.popularmovies;
 
-import android.support.v4.app.Fragment;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.content.CursorLoader;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -12,9 +16,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
@@ -35,7 +41,7 @@ import javax.net.ssl.HttpsURLConnection;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class DetailActivityFragment extends Fragment {
+public class DetailFragment extends Fragment {
 
     ArrayList<TrailerObject> trailerObjects = new ArrayList<>();
     ArrayList<ReviewObject> reviewObjects = new ArrayList<>();
@@ -45,32 +51,69 @@ public class DetailActivityFragment extends Fragment {
     ArrayAdapter mVideosAdapter;
     ArrayAdapter<String> itemsAdapter;
 
-    public DetailActivityFragment() {
+    // The URL used to target the content provider
+    static final Uri CONTENT_URL =
+            Uri.parse("content://com.example.moataz.popularmovies.MoviesProvider/cpmovies");
+
+
+    CursorLoader cursorLoader;
+
+    // Provides access to other applications Content Providers
+    ContentResolver resolver;
+
+    JSONObject JSONobj;
+
+
+    String movieID;
+    String title;
+    String overview;
+    String release;
+    String rating;
+    String imageURL;
+
+    String mDBID;
+
+    public DetailFragment() {
     }
+
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
-
-
-
-
-       View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
         Intent intent = getActivity().getIntent();
         Bundle b = intent.getExtras();
+
+        View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
+        resolver = getActivity().getContentResolver();
+        try {
+            JSONobj = new JSONObject(b.getString("json"));
+
+             movieID=  JSONobj.getString("movieID");
+
+            title= JSONobj.getString("title");
+            release= JSONobj.getString("release");
+            overview = JSONobj.getString("overview");
+            rating=JSONobj.getString("rating");
+            imageURL=JSONobj.getString("imageURL");
+
+        } catch (Exception e)
+        {e.printStackTrace();}
+
+
+
         if (b != null) {
         if(itemsAdapter == null) {
             FetchTrailerTask trilerVideosTask = new FetchTrailerTask();
             FetchTrailerTask trileReviewsTask = new FetchTrailerTask();
 
-            trilerVideosTask.execute(b.getString("TRAILER"), "videos");
-            trileReviewsTask.execute(b.getString("TRAILER"), "reviews");
+            trilerVideosTask.execute(movieID, "videos");
+            trileReviewsTask.execute(movieID, "reviews");
 
 
 
                 TextView titleTextView = (TextView) rootView.findViewById(R.id.title_textView);
-                titleTextView.setText(b.getString("MOVIE_TITLE"));
+                titleTextView.setText(title);
 
                 listView = (ListView) rootView.findViewById(R.id.listview_videos);
                 mVideosAdapter =
@@ -83,23 +126,69 @@ public class DetailActivityFragment extends Fragment {
                 review.setMovementMethod(new ScrollingMovementMethod());
 
                 TextView overviewTextView = (TextView) rootView.findViewById(R.id.overview_textView);
-                overviewTextView.setText(b.getString("MOVIE_OVERVIEW"));
+                overviewTextView.setText(overview);
 
                 TextView ratingTextView = (TextView) rootView.findViewById(R.id.rating_textView);
-                ratingTextView.setText(String.valueOf(b.getDouble("MOVIE_RATING")));
+                ratingTextView.setText(rating);
 
                 TextView releaseDateTextView = (TextView) rootView.findViewById(R.id.releaseDate_textView);
-                releaseDateTextView.setText(b.getString("MOVIE_RELEASE_DATE"));
+                releaseDateTextView.setText(release);
 
                 ImageView posterImageView = (ImageView) rootView.findViewById(R.id.poster_imageView);
 
                 Picasso.with(getActivity()) //
-                        .load(b.getString("MOVIE_POSTER")) //
+                        .load(imageURL) //
                          //
                         .error(R.drawable.error) //
                         .fit() //
                         .tag(getActivity()) //
                         .into(posterImageView);
+
+
+          ImageButton favorite = (ImageButton) rootView.findViewById(R.id.fav_btn);
+
+            if(lookupContact(movieID)){
+                favorite.setSelected(true);
+            Toast.makeText(getActivity(),"found it",Toast.LENGTH_SHORT).show();
+            }else {
+                favorite.setSelected(false);
+                Toast.makeText(getActivity(),"not there",Toast.LENGTH_SHORT).show();
+            }
+
+            favorite.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                    if (lookupContact(movieID)){
+                        v.setSelected(false);
+                        Toast.makeText(getActivity(),"already there shod be deleted",Toast.LENGTH_SHORT).show();
+                        // Use the resolver to delete ids by passing the content provider url
+                        // what you are targeting with the where and the string that replaces
+                        // the ? in the where clause
+                         resolver.delete(CONTENT_URL,
+                                "id = ? ", new String[]{movieID});
+
+
+                    }
+
+                    else {
+                        Toast.makeText(getActivity(),"not there added",Toast.LENGTH_SHORT).show();
+                        v.setSelected(true);
+                        ContentValues values = new ContentValues();
+                        values.put("movie", JSONobj.toString());
+                        values.put("mDBID",movieID);
+                        // Insert the value into the Content Provider
+                        resolver.insert(CONTENT_URL, values);
+
+                        Toast.makeText(getActivity(), "New Movie Added", Toast.LENGTH_LONG)
+                                .show();
+                        v.setSelected(true);
+                    }
+
+                    getContacts();
+
+                }
+            });
 
             }
 
@@ -109,6 +198,76 @@ public class DetailActivityFragment extends Fragment {
 
         return rootView;
     }
+
+
+    public boolean lookupContact(String movieID) {
+
+        // The id we want to search for
+        String idToFind = movieID;
+
+        // Holds the column data we want to retrieve
+        String[] projection = new String[]{"id", "mDBID","movie"};
+
+        // Pass the URL for Content Provider, the projection,
+        // the where clause followed by the matches in an array for the ?
+        // null is for sort order
+        Cursor cursor = resolver.query(CONTENT_URL,
+                projection, "id = ? ", new String[]{idToFind}, null);
+
+        String movie = "";
+
+        // Cycle through our one result or print error
+        if(cursor.moveToFirst()){
+
+            String id = cursor.getString(cursor.getColumnIndex("id"));
+            String moviefromdb = cursor.getString(cursor.getColumnIndex("movie"));
+            String idfromdb = cursor.getString(cursor.getColumnIndex("mDBID"));
+
+            movie = movie +idfromdb+" : "+ id + " : " + moviefromdb + "\n";
+            Log.d("the movie",movie);
+           return true;
+        }else{
+
+            return false;
+        }
+
+
+
+
+
+    }
+
+
+
+    public void getContacts(){
+
+        // Projection contains the columns we want
+        String[] projection = new String[]{"id", "mDBID","movie"};
+
+        // Pass the URL, projection and I'll cover the other options below
+        Cursor cursor = resolver.query(CONTENT_URL, projection, null, null, null);
+
+        String movieList = "";
+
+        // Cycle through and display every row of data
+        if(cursor.moveToFirst()){
+
+            do{
+
+                String id = cursor.getString(cursor.getColumnIndex("id"));
+                String movie = cursor.getString(cursor.getColumnIndex("movie"));
+                String idfromdb = cursor.getString(cursor.getColumnIndex("mDBID"));
+                movieList = movieList + idfromdb+" : "+ id + " : " + movie + "\n";
+
+            }while (cursor.moveToNext());
+
+        }
+ Log.d("movieDB",movieList);
+
+
+    }
+
+
 
     public class FetchTrailerTask extends AsyncTask<String, Void, String> {
         HttpURLConnection urlConnection = null;

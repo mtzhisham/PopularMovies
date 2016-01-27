@@ -21,13 +21,23 @@
             </intent-filter>
         </activity>
         <activity
+
             android:name=".DetailActivity"
             android:label="@string/title_activity_detail"
-            android:parentActivityName=".MainActivity">
+
+            android:parentActivityName=".MainActivity"
+            >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.moataz.popularmovies.MainActivity" />
         </activity>
+        <!-- The Content Provider is declared -->
+        <provider
+            android:name=".MoviesProvider"
+            android:authorities="com.example.moataz.popularmovies.MoviesProvider"
+            android:exported="true"
+            android:multiprocess="true" >
+        </provider>
 
     </application>
 

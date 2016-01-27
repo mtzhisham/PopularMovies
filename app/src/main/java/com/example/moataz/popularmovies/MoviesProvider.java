@@ -28,6 +28,7 @@ public class MoviesProvider extends ContentProvider {
 
     static final String id = "id";
     static final String movie = "movie";
+    static final String mDBID ="mDBID";
 
     static final int uriCode = 1;
 
@@ -44,10 +45,10 @@ public class MoviesProvider extends ContentProvider {
     private SQLiteDatabase sqlDB;
     static final String DATABASE_NAME = "favMovies";
     static final String TABLE_NAME = "userFav";
-    static final int DATABASE_VERSION = 4;
+    static final int DATABASE_VERSION = 10;
     static final String CREATE_DB_TABLE = " CREATE TABLE " + TABLE_NAME
             + " (id INTEGER PRIMARY KEY AUTOINCREMENT, "
-
+            +    "mDBID TEXT NOT NULL, "
             + " movie TEXT NOT NULL);";
 
     @Override

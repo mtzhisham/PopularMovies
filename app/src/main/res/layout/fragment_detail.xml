@@ -1,6 +1,8 @@
 <ScrollView  xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="fill_parent" android:layout_height="fill_parent"
+    android:background="@color/backgrounddark"
+    android:scrollbarStyle="outsideOverlay"
 
     >
 
@@ -9,6 +11,8 @@
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+
+
         android:gravity="center_vertical"
         android:minHeight="?android:attr/listPreferredItemHeight"
 
@@ -18,7 +22,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceLarge"
-
+            android:textColor="@color/WhiteText"
             android:id="@+id/title_textView"
             android:layout_weight="1"
 
@@ -27,7 +31,9 @@
         <LinearLayout
             android:orientation="horizontal"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:gravity="center">
 
             <ImageView
                 android:layout_width="185dp"
@@ -36,7 +42,7 @@
                 android:paddingLeft="8dp"
                 android:paddingBottom="16dp"
                 android:paddingTop="16dp"
-
+                android:gravity="center_vertical|center_horizontal"
                 />
 
             <LinearLayout
@@ -44,30 +50,51 @@
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="match_parent"
-                android:gravity="center_horizontal">
+                android:layout_gravity="center"
+                android:gravity="center">
 
-                <TextView
+                <LinearLayout
+                    android:orientation="vertical"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:layout_gravity="center"
+                    android:gravity="center">
 
-                    android:id="@+id/releaseDate_textView"
-                    />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:textColor="@color/WhiteText"
+                        android:id="@+id/releaseDate_textView"
+                        />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        android:textColor="@color/WhiteText"
+                        android:id="@+id/rating_textView" />
+                </LinearLayout>
 
-                    android:id="@+id/rating_textView" />
+                <ImageButton
+                    android:id="@+id/fav_btn"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:src="@drawable/btn_star"
+                    android:onClick="setColor"
+                    android:layout_alignParentBottom="true"
+                    android:layout_centerHorizontal="true"
+                    android:background="#00ffffff" />
             </LinearLayout>
         </LinearLayout>
 
         <TextView
+            android:paddingTop="26dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-
-            android:id="@+id/overview_textView" />
+            android:textColor="@color/WhiteText"
+            android:id="@+id/overview_textView"
+            android:paddingBottom="26dp"/>
 
 
         <FrameLayout
@@ -75,10 +102,11 @@
             android:layout_height="match_parent">
 
             <ListView
-                android:paddingTop="16dp"
+                android:padding="26dp"
                 android:id="@+id/listview_videos"
                 android:layout_width="match_parent"
-                android:layout_height="130dp" />
+                android:layout_height="130dp"
+                />
         </FrameLayout>
 
 
@@ -89,7 +117,7 @@
             android:paddingTop="26dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-
+            android:textColor="@color/WhiteText"
             android:id="@+id/review_textView"
             android:maxLines = "9"
 
