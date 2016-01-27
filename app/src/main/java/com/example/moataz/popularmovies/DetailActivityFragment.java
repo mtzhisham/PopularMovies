@@ -44,16 +44,22 @@ public class DetailActivityFragment extends Fragment {
     TextView review;
     ArrayAdapter mVideosAdapter;
     ArrayAdapter<String> itemsAdapter;
+
     public DetailActivityFragment() {
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
+
+
+
+
        View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
         Intent intent = getActivity().getIntent();
         Bundle b = intent.getExtras();
-
+        if (b != null) {
         if(itemsAdapter == null) {
             FetchTrailerTask trilerVideosTask = new FetchTrailerTask();
             FetchTrailerTask trileReviewsTask = new FetchTrailerTask();
@@ -62,7 +68,7 @@ public class DetailActivityFragment extends Fragment {
             trileReviewsTask.execute(b.getString("TRAILER"), "reviews");
 
 
-            if (b != null) {
+
                 TextView titleTextView = (TextView) rootView.findViewById(R.id.title_textView);
                 titleTextView.setText(b.getString("MOVIE_TITLE"));
 

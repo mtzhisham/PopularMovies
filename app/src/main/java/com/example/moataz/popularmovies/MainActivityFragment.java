@@ -38,7 +38,7 @@ import javax.net.ssl.HttpsURLConnection;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class MainActivityFragment extends Fragment {
+public class MainActivityFragment extends Fragment  {
 
 
     //    String[] moviesPosters = new String[20];
@@ -56,6 +56,17 @@ public class MainActivityFragment extends Fragment {
     String defaultUserCount = "";
     String userCount="vote_count.desc";
     String SelectedCount=defaultUserCount;
+/**
+ +     * A callback interface that all activities containing this fragment must
+ +     * implement. This mechanism allows activities to be notified of item
+ +     * selections.
+ +     */
+        public interface Callback {
+                /**
+                  * DetailFragmentCallback for when an item has been selected.
+                  */
+                        public void onItemSelected(Uri dateUri);
+            }
 
 
     public MainActivityFragment() {
@@ -153,7 +164,7 @@ public class MainActivityFragment extends Fragment {
         customMoviesAdapter = new CustomMoviesAdapter(getContext(),new ArrayList<String>());
         gv = (GridView) rootView.findViewById(R.id.movies_grid);
         gv.setAdapter(customMoviesAdapter);
-
+        gv.setSelection(1);
 
 
 
@@ -233,8 +244,8 @@ public class MainActivityFragment extends Fragment {
                 intent.putExtra("TRAILER",trailer);
 
 
-
-
+// CursorAdapter returns a cursor at the correct position for getItem(), or null
+                // if it cannot seek to that position.
 
 
 
