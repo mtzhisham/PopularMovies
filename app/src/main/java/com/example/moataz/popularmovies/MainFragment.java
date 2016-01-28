@@ -1,12 +1,15 @@
 package com.example.moataz.popularmovies;
 
+import android.content.ContentResolver;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.CursorLoader;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -51,11 +54,19 @@ public class MainFragment extends Fragment  {
     String popMovies = "popularity.desc";
     String highestRateMovies = "vote_average.desc";
     String SelectedSort = popMovies;
+    String favoriteMovies;
     View rootView;
     String defaultUserCount = "";
     String userCount="vote_count.desc";
     String SelectedCount=defaultUserCount;
+     final Uri CONTENT_URL =
+            Uri.parse("content://com.example.moataz.popularmovies.MoviesProvider/cpmovies");
 
+
+    CursorLoader cursorLoader;
+
+    // Provides access to other applications Content Providers
+    ContentResolver resolver;
 
 
 /**
@@ -78,6 +89,8 @@ public class MainFragment extends Fragment  {
         outState.putParcelableArrayList("movies", movieObjects);
         super.onSaveInstanceState(outState);
     }
+
+
     public void drawPosters(){
         int movieCount=movieObjects.size();
         for (int i = 0; i< movieCount;i++) {
@@ -105,7 +118,7 @@ public class MainFragment extends Fragment  {
             handler.post(new Runnable(){
 
                 public void run(){
-                    FetchMoviesTask fetchMovies = new FetchMoviesTask();
+//                    FetchMoviesTask fetchMovies = new FetchMoviesTask();
                     drawPosters();
 
                 }
@@ -160,7 +173,7 @@ public class MainFragment extends Fragment  {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-
+        resolver = getActivity().getContentResolver();
 
         rootView = inflater.inflate(R.layout.fragment_main, container, false);
         customMoviesAdapter = new CustomMoviesAdapter(getContext(),new ArrayList<String>());
@@ -185,6 +198,14 @@ public class MainFragment extends Fragment  {
         programFab2.setImageResource(R.drawable.ic_edit);
         programFab2.setColorNormal(Color.parseColor("#3F51B5"));
         menu.addMenuButton(programFab2);
+
+        final FloatingActionButton programFab3 = new FloatingActionButton(getActivity());
+        programFab3.setButtonSize(FloatingActionButton.SIZE_MINI);
+        programFab3.setLabelText("Favorite Movies");
+        programFab3.setImageResource(R.drawable.ic_star);
+        programFab3.setColorNormal(Color.parseColor("#3F51B5"));
+        menu.addMenuButton(programFab3);
+
 
 
 
@@ -213,6 +234,23 @@ public class MainFragment extends Fragment  {
                     menu.close(true);
                 }
             });
+        programFab3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+//                  Toast.makeText(getActivity(), programFab2.getLabelText(), Toast.LENGTH_SHORT).show();
+
+                SelectedSort = favoriteMovies;
+                getMoviesFromDB();
+
+//                CustomMoviesAdapter blobsMoviesAdapter = new CustomMoviesAdapter(getContext(),new ArrayList<String>(),"blobs");
+//                gv = (GridView) rootView.findViewById(R.id.movies_grid);
+//                gv.setAdapter(blobsMoviesAdapter);
+//                blobsMoviesAdapter.clear();;
+//                blobsMoviesAdapter.addAll();
+
+                menu.close(true);
+            }
+        });
 
 
 
@@ -224,20 +262,45 @@ public class MainFragment extends Fragment  {
         gv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
                 int index = (int) id;
-                String movieID = String.valueOf(movieObjects.get(index).id) ;
+                if (SelectedSort == favoriteMovies) {
+                    String[] projection = new String[]{"mDBID","poster"};
+
+                    // Pass the URL, projection and I'll cover the other options below
+                    Cursor cursor = resolver.query(CONTENT_URL, projection, null, null, null);
+
+                    for(int i = 0; i<index;i++){
+                        if(cursor.moveToFirst()){
+
+                            do{
+
+
+
+                            }while (cursor.moveToNext());
+
+                        }else{}
 
 
 
 
+
+
+                    }
+
+
+
+
+
+                } else{
+
+                String movieID = String.valueOf(movieObjects.get(index).id);
                 String title = movieObjects.get(index).title;
-                String overview= movieObjects.get(index).overview;
+                String overview = movieObjects.get(index).overview;
                 double rating = movieObjects.get(index).rating;
                 String release = movieObjects.get(index).releaseDate;
                 String imageURL = movieObjects.get(index).posterPath;
 
-                Intent intent = new Intent(getActivity(),DetailActivity.class);
+                Intent intent = new Intent(getActivity(), DetailActivity.class);
 
                 Log.d("json before", "before json");
                 JSONObject json = new JSONObject();
@@ -249,16 +312,16 @@ public class MainFragment extends Fragment  {
                     json.put("rating", rating);
                     json.put("imageURL", imageURL);
                     intent.putExtra("json", json.toString());
-                }catch (JSONException e){
+                } catch (JSONException e) {
                     e.printStackTrace();
                 }
 
 //                json.put("uniqueArrays", new JSONArray(items));
 //                String arrayList = json.toString();
 
-Log.d("the pressed string", json.toString());
+                Log.d("the pressed string", json.toString());
                 startActivity(intent);
-
+            }
 
 
             }
@@ -266,6 +329,40 @@ Log.d("the pressed string", json.toString());
 
         return rootView;
     }
+
+    public void getMoviesFromDB(){
+
+        // Projection contains the columns we want
+        String[] projection = new String[]{"id", "mDBID","poster","videos","movie"};
+
+        // Pass the URL, projection and I'll cover the other options below
+        Cursor cursor = resolver.query(CONTENT_URL, projection, null, null, null);
+
+        String movieList = "";
+
+        // Cycle through and display every row of data
+        if(cursor.moveToFirst()){
+
+            do{
+
+                String id = cursor.getString(cursor.getColumnIndex("id"));
+                String movie = cursor.getString(cursor.getColumnIndex("movie"));
+                String idfromdb = cursor.getString(cursor.getColumnIndex("mDBID"));
+//                String Posterfromdb = cursor.getString(cursor.getColumnIndex("poster"));
+                byte[] blov = cursor.getBlob(cursor.getColumnIndex("poster"));
+                String Posterfromdb = blov.toString();
+                String videos = cursor.getString(cursor.getColumnIndex("videos"));
+                movieList = movieList + idfromdb+" : "+ id + " : "+videos+" : "+ Posterfromdb+" : "+ movie + "\n";
+
+            }while (cursor.moveToNext());
+
+        }
+        Log.d("movieDB",movieList);
+
+
+    }
+
+
 
     public class FetchMoviesTask extends AsyncTask<String, Void, String> {
         HttpURLConnection urlConnection = null;

@@ -4,6 +4,7 @@ package com.example.moataz.popularmovies;
 /**
  * Created by Moataz on 12/5/2015.
  */
+
 import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,19 +21,14 @@ final class CustomMoviesAdapter extends ArrayAdapter<String> {
     private final Context context;
     private  List<String> urls = new ArrayList<String>();
 
+
     public CustomMoviesAdapter(Context context, List<String> urls) {
         super(context,0,urls);
         this.context = context;
         this.urls=urls;
-//        // Ensure we get a different ordering of images on each run.
-//        Collections.addAll(urls, Data.URLS);
-//        Collections.shuffle(urls);
-
-//        // Triple up the list.
-//        ArrayList<String> copy = new ArrayList<String>(urls);
-//        urls.addAll(copy);
-//        urls.addAll(copy);
     }
+
+
 
     @Override public View getView(int position, View convertView, ViewGroup parent) {
         SquaredImageView view = (SquaredImageView) convertView;
@@ -54,6 +50,11 @@ final class CustomMoviesAdapter extends ArrayAdapter<String> {
 
         return view;
     }
+
+
+
+
+
 //    .placeholder(R.drawable.placeholder)
     @Override public int getCount() {
         return urls.size();
