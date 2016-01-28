@@ -4,6 +4,10 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -70,9 +74,11 @@ public class DetailFragment extends Fragment {
     String release;
     String rating;
     String imageURL;
-
+    ImageView posterImageView;
     String mDBID;
-
+    ContentValues values;
+    JSONObject jsonvid;
+    String videoArrayJSON;
     public DetailFragment() {
     }
 
@@ -86,6 +92,7 @@ public class DetailFragment extends Fragment {
 
         View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
         resolver = getActivity().getContentResolver();
+         values = new ContentValues();
         try {
             JSONobj = new JSONObject(b.getString("json"));
 
@@ -134,7 +141,7 @@ public class DetailFragment extends Fragment {
                 TextView releaseDateTextView = (TextView) rootView.findViewById(R.id.releaseDate_textView);
                 releaseDateTextView.setText(release);
 
-                ImageView posterImageView = (ImageView) rootView.findViewById(R.id.poster_imageView);
+                 posterImageView = (ImageView) rootView.findViewById(R.id.poster_imageView);
 
                 Picasso.with(getActivity()) //
                         .load(imageURL) //
@@ -166,7 +173,7 @@ public class DetailFragment extends Fragment {
                         // what you are targeting with the where and the string that replaces
                         // the ? in the where clause
                          resolver.delete(CONTENT_URL,
-                                "id = ? ", new String[]{movieID});
+                                "mDBID = ? ", new String[]{movieID});
 
 
                     }
@@ -174,9 +181,17 @@ public class DetailFragment extends Fragment {
                     else {
                         Toast.makeText(getActivity(),"not there added",Toast.LENGTH_SHORT).show();
                         v.setSelected(true);
-                        ContentValues values = new ContentValues();
+                        values = new ContentValues();
                         values.put("movie", JSONobj.toString());
                         values.put("mDBID",movieID);
+                        videoArrayJSON = jsonvid.toString();
+                        values.put("videos",videoArrayJSON);
+
+
+
+                        DbBitmapUtility dbu = new DbBitmapUtility();
+                        byte[] posterBytes = dbu.getBytes(getBitmap(posterImageView));
+                        values.put("poster",posterBytes);
                         // Insert the value into the Content Provider
                         resolver.insert(CONTENT_URL, values);
 
@@ -200,19 +215,34 @@ public class DetailFragment extends Fragment {
     }
 
 
+public Bitmap getBitmap (ImageView imageView){
+    Bitmap bitmap;
+    if (imageView.getDrawable() instanceof BitmapDrawable) {
+        bitmap = ((BitmapDrawable) imageView.getDrawable()).getBitmap();
+    } else {
+        Drawable d = imageView.getDrawable();
+        bitmap = Bitmap.createBitmap(d.getIntrinsicWidth(), d.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        d.draw(canvas);
+    }
+
+    return bitmap;
+}
+
+
     public boolean lookupContact(String movieID) {
 
         // The id we want to search for
         String idToFind = movieID;
 
         // Holds the column data we want to retrieve
-        String[] projection = new String[]{"id", "mDBID","movie"};
+        String[] projection = new String[]{"id", "mDBID","poster","movie"};
 
         // Pass the URL for Content Provider, the projection,
         // the where clause followed by the matches in an array for the ?
         // null is for sort order
         Cursor cursor = resolver.query(CONTENT_URL,
-                projection, "id = ? ", new String[]{idToFind}, null);
+                projection, "mDBID = ? ", new String[]{idToFind}, null);
 
         String movie = "";
 
@@ -222,8 +252,9 @@ public class DetailFragment extends Fragment {
             String id = cursor.getString(cursor.getColumnIndex("id"));
             String moviefromdb = cursor.getString(cursor.getColumnIndex("movie"));
             String idfromdb = cursor.getString(cursor.getColumnIndex("mDBID"));
-
-            movie = movie +idfromdb+" : "+ id + " : " + moviefromdb + "\n";
+            byte[] blov = cursor.getBlob(cursor.getColumnIndex("poster"));
+            String Posterfromdb = blov.toString();
+            movie = movie +idfromdb+" : "+ id + " : "+Posterfromdb + " : " + moviefromdb + "\n";
             Log.d("the movie",movie);
            return true;
         }else{
@@ -242,7 +273,7 @@ public class DetailFragment extends Fragment {
     public void getContacts(){
 
         // Projection contains the columns we want
-        String[] projection = new String[]{"id", "mDBID","movie"};
+        String[] projection = new String[]{"id", "mDBID","poster","videos","movie"};
 
         // Pass the URL, projection and I'll cover the other options below
         Cursor cursor = resolver.query(CONTENT_URL, projection, null, null, null);
@@ -257,7 +288,11 @@ public class DetailFragment extends Fragment {
                 String id = cursor.getString(cursor.getColumnIndex("id"));
                 String movie = cursor.getString(cursor.getColumnIndex("movie"));
                 String idfromdb = cursor.getString(cursor.getColumnIndex("mDBID"));
-                movieList = movieList + idfromdb+" : "+ id + " : " + movie + "\n";
+//                String Posterfromdb = cursor.getString(cursor.getColumnIndex("poster"));
+                byte[] blov = cursor.getBlob(cursor.getColumnIndex("poster"));
+                String Posterfromdb = blov.toString();
+                String videos = cursor.getString(cursor.getColumnIndex("videos"));
+                movieList = movieList + idfromdb+" : "+ id + " : "+videos+" : "+ Posterfromdb+" : "+ movie + "\n";
 
             }while (cursor.moveToNext());
 
@@ -374,22 +409,35 @@ public class DetailFragment extends Fragment {
                 if (returnTybe == "videos") {
                     ArrayList<TrailerObject> trailerObjects = new ArrayList<>();
                     trailerObjects.addAll(getTrailerDataFromJson(result));
+
                     int trailerCount = trailerObjects.size();
                     final ArrayList<TrailerObject> videoArray= new ArrayList<>();
                     ArrayList<String> videoNAme = new ArrayList<>();
+                    ArrayList<String> videokey = new ArrayList<>();
 
                     if ( videoArray.isEmpty()){
                     for (int i = 0; i < trailerCount; i++) {
                         Log.d("from TRAILER OBJECT", trailerObjects.get(i).name + trailerObjects.get(i).key);
-
+                        videoArray.add(trailerObjects.get(i));
 //                        videoName.setText(trailerObjects.get(i).name);
-//                       videokey = trailerObjects.get(i).key;
-                       videoArray.add(trailerObjects.get(i));
+                       videokey.add((videoArray.get(i).key)) ;
                         videoNAme.add(videoArray.get(i).name);
                     }}
                     mVideosAdapter.clear();
                     mVideosAdapter.addAll(videoNAme);
 
+                    try {
+                        jsonvid = new JSONObject();
+                        jsonvid.put("videoNameArray", new JSONArray(videoNAme));
+                        jsonvid.put("videoKeyArray", new JSONArray(videokey));
+
+                        ;
+                        Log.d("JSONVIDEOS", videoArrayJSON);
+
+
+                    } catch (Exception e){
+                        e.printStackTrace();
+                    }
 
        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
            @Override
@@ -406,6 +454,8 @@ public class DetailFragment extends Fragment {
 
                 }
                 else {
+                    values.put("reviews", result);
+
                     ArrayList<ReviewObject> reviewObjects = new ArrayList<>();
                     reviewObjects.addAll(getTrailerDataFromJson(result));
                     int reviewCount = reviewObjects.size();

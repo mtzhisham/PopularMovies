@@ -6,6 +6,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.facebook.stetho.Stetho;
+
 public class MainActivity extends AppCompatActivity implements BlankFragment.OnFragmentInteractionListener {
     private static final String DETAILFRAGMENT_TAG = "DFTAG";
     private boolean mTwoPane;
@@ -18,7 +20,7 @@ public class MainActivity extends AppCompatActivity implements BlankFragment.OnF
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        Stetho.initializeWithDefaults(this);
 //        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 //        setSupportActionBar(toolbar);
 
