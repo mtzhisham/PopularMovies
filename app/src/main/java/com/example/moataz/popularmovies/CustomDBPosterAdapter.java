@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -69,6 +70,7 @@ public class CustomDBPosterAdapter extends BaseAdapter {
                 Bitmap mBitmap = BitmapFactory.decodeStream(inputStream);
                 Images.add(mBitmap);
                 cursor.moveToNext();
+                Log.d("heres a poster", mBitmap.toString());
 
             }while (cursor.moveToNext());
 

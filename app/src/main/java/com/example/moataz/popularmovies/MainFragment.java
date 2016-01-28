@@ -1,6 +1,7 @@
 package com.example.moataz.popularmovies;
 
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Color;
@@ -9,7 +10,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.CursorLoader;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -33,6 +33,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.sql.Blob;
 import java.util.ArrayList;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -63,23 +64,30 @@ public class MainFragment extends Fragment  {
             Uri.parse("content://com.example.moataz.popularmovies.MoviesProvider/cpmovies");
 
 
-    CursorLoader cursorLoader;
-
     // Provides access to other applications Content Providers
     ContentResolver resolver;
 
+    OnHeadlineSelectedListener mCallback;
 
-/**
- +     * A callback interface that all activities containing this fragment must
- +     * implement. This mechanism allows activities to be notified of item
- +     * selections.
- +     */
-        public interface Callback {
-                /**
-                  * DetailFragmentCallback for when an item has been selected.
-                  */
-                        public void onItemSelected(Uri dateUri);
-            }
+    // Container Activity must implement this interface
+    public interface OnHeadlineSelectedListener {
+        public void onArticleSelected(int position);
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+
+        // This makes sure that the container activity has implemented
+        // the callback interface. If not, it throws an exception
+        try {
+            mCallback = (OnHeadlineSelectedListener) getActivity();
+        } catch (ClassCastException e) {
+            throw new ClassCastException(getActivity().toString()
+                    + " must implement OnHeadlineSelectedListener");
+        }
+    }
+
 
 
     public MainFragment() {
@@ -248,6 +256,12 @@ public class MainFragment extends Fragment  {
 //                blobsMoviesAdapter.clear();;
 //                blobsMoviesAdapter.addAll();
 
+                CustomDBPosterAdapter blobsMoviesAdapter = new CustomDBPosterAdapter(getContext(), new ArrayList<Blob>());
+                gv.setAdapter(blobsMoviesAdapter);
+
+
+
+
                 menu.close(true);
             }
         });
@@ -263,6 +277,7 @@ public class MainFragment extends Fragment  {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 int index = (int) id;
+                mCallback.onArticleSelected(position);
                 if (SelectedSort == favoriteMovies) {
                     String[] projection = new String[]{"mDBID","poster"};
 
@@ -320,7 +335,7 @@ public class MainFragment extends Fragment  {
 //                String arrayList = json.toString();
 
                 Log.d("the pressed string", json.toString());
-                startActivity(intent);
+               startActivity(intent);
             }
 
 

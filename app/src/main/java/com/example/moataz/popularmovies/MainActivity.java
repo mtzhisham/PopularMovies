@@ -1,19 +1,19 @@
 package com.example.moataz.popularmovies;
 
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.facebook.stetho.Stetho;
 
-public class MainActivity extends AppCompatActivity implements BlankFragment.OnFragmentInteractionListener {
+public class MainActivity extends AppCompatActivity implements MainFragment.OnHeadlineSelectedListener {
     private static final String DETAILFRAGMENT_TAG = "DFTAG";
     private boolean mTwoPane;
 
     public void onSaveInstanceState(Bundle outState) {
-        outState.putInt("true",1);
+        outState.putInt("true", 1);
         super.onSaveInstanceState(outState);
     }
     @Override
@@ -80,8 +80,10 @@ public class MainActivity extends AppCompatActivity implements BlankFragment.OnF
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    public void onFragmentInteraction(Uri uri) {
 
+
+    @Override
+    public void onArticleSelected(int position) {
+        Toast.makeText(MainActivity.this, "what to do now!", Toast.LENGTH_SHORT).show();
     }
 }

@@ -413,14 +413,15 @@ public Bitmap getBitmap (ImageView imageView){
                     int trailerCount = trailerObjects.size();
                     final ArrayList<TrailerObject> videoArray= new ArrayList<>();
                     ArrayList<String> videoNAme = new ArrayList<>();
-                    ArrayList<String> videokey = new ArrayList<>();
+                    final ArrayList<String> videokeyArray = new ArrayList<>();
+
 
                     if ( videoArray.isEmpty()){
                     for (int i = 0; i < trailerCount; i++) {
                         Log.d("from TRAILER OBJECT", trailerObjects.get(i).name + trailerObjects.get(i).key);
                         videoArray.add(trailerObjects.get(i));
 //                        videoName.setText(trailerObjects.get(i).name);
-                       videokey.add((videoArray.get(i).key)) ;
+                        videokeyArray.add((videoArray.get(i).key)) ;
                         videoNAme.add(videoArray.get(i).name);
                     }}
                     mVideosAdapter.clear();
@@ -429,7 +430,7 @@ public Bitmap getBitmap (ImageView imageView){
                     try {
                         jsonvid = new JSONObject();
                         jsonvid.put("videoNameArray", new JSONArray(videoNAme));
-                        jsonvid.put("videoKeyArray", new JSONArray(videokey));
+                        jsonvid.put("videoKeyArray", new JSONArray(videokeyArray));
 
                         ;
                         Log.d("JSONVIDEOS", videoArrayJSON);
@@ -442,11 +443,12 @@ public Bitmap getBitmap (ImageView imageView){
        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
            @Override
            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-               String videokey = videoArray.get(position).getKey(position);
+               String videokey = videokeyArray.get(position);
                final String urlStr = "http://www.youtube.com/watch?v="+videokey;
                Intent intent = new Intent(Intent.ACTION_VIEW);
                intent.setData(Uri.parse(urlStr));
                             startActivity(intent);
+
            }
        });
 
