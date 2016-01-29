@@ -1,14 +1,17 @@
 package com.example.moataz.popularmovies;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.facebook.stetho.Stetho;
 
-public class MainActivity extends AppCompatActivity implements MainFragment.OnHeadlineSelectedListener {
+public class MainActivity extends AppCompatActivity  implements MainFragment.Callback {
     private static final String DETAILFRAGMENT_TAG = "DFTAG";
     private boolean mTwoPane;
 
@@ -16,6 +19,7 @@ public class MainActivity extends AppCompatActivity implements MainFragment.OnHe
         outState.putInt("true", 1);
         super.onSaveInstanceState(outState);
     }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,16 +37,12 @@ public class MainActivity extends AppCompatActivity implements MainFragment.OnHe
             // In t[wo-pane mode, show the detail view in this activity by
             // adding or replacing the detail fragment using a
             // fragment transaction.
-            if (savedInstanceState ==null || !savedInstanceState.containsKey("true")) {
+            if (savedInstanceState == null) {
 
                 getSupportFragmentManager().beginTransaction()
                         .replace(R.id.movie_detail_container, new DetailFragment(), DETAILFRAGMENT_TAG)
                         .commit();
 
-
-            } else { getSupportFragmentManager().beginTransaction()
-                    .add(R.id.blank, new BlankFragment())
-                    .commit();
 
             }
         } else {
@@ -51,11 +51,6 @@ public class MainActivity extends AppCompatActivity implements MainFragment.OnHe
 
         }
     }
-
-
-
-
-
 
 
     @Override
@@ -81,9 +76,29 @@ public class MainActivity extends AppCompatActivity implements MainFragment.OnHe
     }
 
 
-
     @Override
-    public void onArticleSelected(int position) {
-        Toast.makeText(MainActivity.this, "what to do now!", Toast.LENGTH_SHORT).show();
+    public void onItemSelected(String msg) {
+Log.d("from main activity: ","i was selected");
+        Toast.makeText(this, "got " + "from main activity: "+"i was selected", Toast.LENGTH_SHORT).show();
+        if (mTwoPane) {
+                        // In two-pane mode, show the detail view in this activity by
+                                // adding or replacing the detail fragment using a
+                                        // fragment transaction.
+                                    Bundle args = new Bundle();
+            args.putString(DetailFragment.gotdatafromargs,msg);
+
+                    DetailFragment fragment = new DetailFragment();
+            fragment.setArguments(args);
+
+                    getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.movie_detail_container, fragment, DETAILFRAGMENT_TAG)
+                    .commit();
+
+        } else {
+            Intent intent = new Intent(this, DetailActivity.class)
+                    .setData(Uri.parse(msg));
+            startActivity(intent);
+
+        }
     }
 }

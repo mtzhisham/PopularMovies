@@ -1,7 +1,6 @@
 package com.example.moataz.popularmovies;
 
 import android.content.ContentResolver;
-import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Color;
@@ -67,27 +66,17 @@ public class MainFragment extends Fragment  {
     // Provides access to other applications Content Providers
     ContentResolver resolver;
 
-    OnHeadlineSelectedListener mCallback;
-
-    // Container Activity must implement this interface
-    public interface OnHeadlineSelectedListener {
-        public void onArticleSelected(int position);
-    }
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-
-        // This makes sure that the container activity has implemented
-        // the callback interface. If not, it throws an exception
-        try {
-            mCallback = (OnHeadlineSelectedListener) getActivity();
-        } catch (ClassCastException e) {
-            throw new ClassCastException(getActivity().toString()
-                    + " must implement OnHeadlineSelectedListener");
-        }
-    }
-
+    /**
+     +     * A callback interface that all activities containing this fragment must
+     +     * implement. This mechanism allows activities to be notified of item
+     +     * selections.
+     +     */
+        public interface Callback {
+                /**
+                 * DetailFragmentCallback for when an item has been selected.
+                  */
+                        public void onItemSelected(String msg);
+            }
 
 
     public MainFragment() {
@@ -277,36 +266,8 @@ public class MainFragment extends Fragment  {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 int index = (int) id;
-                mCallback.onArticleSelected(position);
-                if (SelectedSort == favoriteMovies) {
-                    String[] projection = new String[]{"mDBID","poster"};
-
-                    // Pass the URL, projection and I'll cover the other options below
-                    Cursor cursor = resolver.query(CONTENT_URL, projection, null, null, null);
-
-                    for(int i = 0; i<index;i++){
-                        if(cursor.moveToFirst()){
-
-                            do{
 
 
-
-                            }while (cursor.moveToNext());
-
-                        }else{}
-
-
-
-
-
-
-                    }
-
-
-
-
-
-                } else{
 
                 String movieID = String.valueOf(movieObjects.get(index).id);
                 String title = movieObjects.get(index).title;
@@ -335,11 +296,16 @@ public class MainFragment extends Fragment  {
 //                String arrayList = json.toString();
 
                 Log.d("the pressed string", json.toString());
-               startActivity(intent);
+//               startActivity(intent);
+
+                ((Callback) getActivity()).onItemSelected("got it from main fragment"+movieID);
+
+
+
             }
 
 
-            }
+
         });
 
         return rootView;

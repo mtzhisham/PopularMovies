@@ -51,7 +51,7 @@ public class DetailFragment extends Fragment {
     ArrayList<ReviewObject> reviewObjects = new ArrayList<>();
     ListView listView;
     TextView videoName;
-    TextView review;
+    TextView reviewTextView;
     ArrayAdapter mVideosAdapter;
     ArrayAdapter<String> itemsAdapter;
 
@@ -59,7 +59,7 @@ public class DetailFragment extends Fragment {
     static final Uri CONTENT_URL =
             Uri.parse("content://com.example.moataz.popularmovies.MoviesProvider/cpmovies");
 
-
+    static final String gotdatafromargs="args ddata is here";
     CursorLoader cursorLoader;
 
     // Provides access to other applications Content Providers
@@ -79,24 +79,26 @@ public class DetailFragment extends Fragment {
     ContentValues values;
     JSONObject jsonvid;
     String videoArrayJSON;
+    TextView titleTextView;
+    TextView overviewTextView;
+    TextView ratingTextView;
+    TextView releaseDateTextView;
+    private Uri receiveMovie;
+
+    Bundle b;
     public DetailFragment() {
     }
 
-
-
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        Intent intent = getActivity().getIntent();
-        Bundle b = intent.getExtras();
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
 
-        View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
-        resolver = getActivity().getContentResolver();
-         values = new ContentValues();
+        Intent intent = getActivity().getIntent();
+        b = intent.getExtras();
         try {
             JSONobj = new JSONObject(b.getString("json"));
 
-             movieID=  JSONobj.getString("movieID");
+            movieID=  JSONobj.getString("movieID");
 
             title= JSONobj.getString("title");
             release= JSONobj.getString("release");
@@ -104,22 +106,46 @@ public class DetailFragment extends Fragment {
             rating=JSONobj.getString("rating");
             imageURL=JSONobj.getString("imageURL");
 
+            Log.d("onActivitycreated",b.getString("json"));
+
         } catch (Exception e)
         {e.printStackTrace();}
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+
+
+        View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
+        resolver = getActivity().getContentResolver();
+         values = new ContentValues();
 
 
 
-        if (b != null) {
-        if(itemsAdapter == null) {
-            FetchTrailerTask trilerVideosTask = new FetchTrailerTask();
-            FetchTrailerTask trileReviewsTask = new FetchTrailerTask();
+                        Bundle arguments = getArguments();
+                if (arguments != null) {
+                        receiveMovie = arguments.getParcelable(DetailFragment.gotdatafromargs);
 
-            trilerVideosTask.execute(movieID, "videos");
-            trileReviewsTask.execute(movieID, "reviews");
+                    Log.d("from detail fragment",receiveMovie.toString());
+                    Toast.makeText(getActivity(),"got "+receiveMovie.toString(),Toast.LENGTH_SHORT).show();
+                    }
 
 
 
-                TextView titleTextView = (TextView) rootView.findViewById(R.id.title_textView);
+
+
+
+
+
+                titleTextView = (TextView) rootView.findViewById(R.id.title_textView);
                 titleTextView.setText(title);
 
                 listView = (ListView) rootView.findViewById(R.id.listview_videos);
@@ -129,89 +155,106 @@ public class DetailFragment extends Fragment {
 
 
 //                videoName = (TextView) rootView.findViewById(R.id.videoLink_tv);
-                review = (TextView) rootView.findViewById(R.id.review_textView);
-                review.setMovementMethod(new ScrollingMovementMethod());
+            reviewTextView = (TextView) rootView.findViewById(R.id.review_textView);
 
-                TextView overviewTextView = (TextView) rootView.findViewById(R.id.overview_textView);
-                overviewTextView.setText(overview);
 
-                TextView ratingTextView = (TextView) rootView.findViewById(R.id.rating_textView);
-                ratingTextView.setText(rating);
+                overviewTextView = (TextView) rootView.findViewById(R.id.overview_textView);
 
-                TextView releaseDateTextView = (TextView) rootView.findViewById(R.id.releaseDate_textView);
-                releaseDateTextView.setText(release);
+
+                ratingTextView = (TextView) rootView.findViewById(R.id.rating_textView);
+
+
+                releaseDateTextView = (TextView) rootView.findViewById(R.id.releaseDate_textView);
+
 
                  posterImageView = (ImageView) rootView.findViewById(R.id.poster_imageView);
+        listView.setAdapter(mVideosAdapter);
+        reviewTextView.setMovementMethod(new ScrollingMovementMethod());
 
-                Picasso.with(getActivity()) //
-                        .load(imageURL) //
-                         //
-                        .error(R.drawable.error) //
-                        .fit() //
-                        .tag(getActivity()) //
-                        .into(posterImageView);
 
 
           ImageButton favorite = (ImageButton) rootView.findViewById(R.id.fav_btn);
+//        favorite.setVisibility(View.VISIBLE);
+//
+//            if(lookupContact(movieID)){
+//                favorite.setSelected(true);
+//            Toast.makeText(getActivity(),"found it",Toast.LENGTH_SHORT).show();
+//            }else {
+//                favorite.setSelected(false);
+//                Toast.makeText(getActivity(),"not there",Toast.LENGTH_SHORT).show();
+//            }
+//
+//            favorite.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View v) {
+//
+//                    if (lookupContact(movieID)){
+//                        v.setSelected(false);
+//                        Toast.makeText(getActivity(),"already there shod be deleted",Toast.LENGTH_SHORT).show();
+//                        // Use the resolver to delete ids by passing the content provider url
+//                        // what you are targeting with the where and the string that replaces
+//                        // the ? in the where clause
+//                         resolver.delete(CONTENT_URL,
+//                                "mDBID = ? ", new String[]{movieID});
+//
+//
+//                    }
+//
+//                    else {
+//                        Toast.makeText(getActivity(),"not there added",Toast.LENGTH_SHORT).show();
+//                        v.setSelected(true);
+//                        values = new ContentValues();
+//                        values.put("movie", JSONobj.toString());
+//                        values.put("mDBID",movieID);
+//                        videoArrayJSON = jsonvid.toString();
+//                        values.put("videos",videoArrayJSON);
+//
+//
+//
+//                        DbBitmapUtility dbu = new DbBitmapUtility();
+//                        byte[] posterBytes = dbu.getBytes(getBitmap(posterImageView));
+//                        values.put("poster",posterBytes);
+//                        // Insert the value into the Content Provider
+//                        resolver.insert(CONTENT_URL, values);
+//
+//                        Toast.makeText(getActivity(), "New Movie Added", Toast.LENGTH_LONG)
+//                                .show();
+//                        v.setSelected(true);
+//                    }
+//
+//                    getContacts();
+//
+//                }
+//            });
 
-            if(lookupContact(movieID)){
-                favorite.setSelected(true);
-            Toast.makeText(getActivity(),"found it",Toast.LENGTH_SHORT).show();
-            }else {
-                favorite.setSelected(false);
-                Toast.makeText(getActivity(),"not there",Toast.LENGTH_SHORT).show();
-            }
-
-            favorite.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-
-                    if (lookupContact(movieID)){
-                        v.setSelected(false);
-                        Toast.makeText(getActivity(),"already there shod be deleted",Toast.LENGTH_SHORT).show();
-                        // Use the resolver to delete ids by passing the content provider url
-                        // what you are targeting with the where and the string that replaces
-                        // the ? in the where clause
-                         resolver.delete(CONTENT_URL,
-                                "mDBID = ? ", new String[]{movieID});
-
-
-                    }
-
-                    else {
-                        Toast.makeText(getActivity(),"not there added",Toast.LENGTH_SHORT).show();
-                        v.setSelected(true);
-                        values = new ContentValues();
-                        values.put("movie", JSONobj.toString());
-                        values.put("mDBID",movieID);
-                        videoArrayJSON = jsonvid.toString();
-                        values.put("videos",videoArrayJSON);
-
-
-
-                        DbBitmapUtility dbu = new DbBitmapUtility();
-                        byte[] posterBytes = dbu.getBytes(getBitmap(posterImageView));
-                        values.put("poster",posterBytes);
-                        // Insert the value into the Content Provider
-                        resolver.insert(CONTENT_URL, values);
-
-                        Toast.makeText(getActivity(), "New Movie Added", Toast.LENGTH_LONG)
-                                .show();
-                        v.setSelected(true);
-                    }
-
-                    getContacts();
-
-                }
-            });
-
-            }
-
-
-        }
 
 
         return rootView;
+    }
+
+
+    public void setMovieData (){
+
+
+
+        FetchTrailerTask trilerVideosTask = new FetchTrailerTask();
+        FetchTrailerTask trileReviewsTask = new FetchTrailerTask();
+
+        trilerVideosTask.execute(movieID, "videos");
+        trileReviewsTask.execute(movieID, "reviews");
+
+        titleTextView.setText(title);
+
+        overviewTextView.setText(overview);
+        ratingTextView.setText(rating);
+        releaseDateTextView.setText(release);
+        Picasso.with(getActivity()) //
+                .load(imageURL) //
+                        //
+                .error(R.drawable.error) //
+                .fit() //
+                .tag(getActivity()) //
+                .into(posterImageView);
     }
 
 
@@ -465,7 +508,7 @@ public Bitmap getBitmap (ImageView imageView){
                     for (int i = 0; i < reviewCount; i++) {
                         Log.d("from TRAILER OBJECT", reviewObjects.get(i).author + reviewObjects.get(i).review);
 
-                        review.setText("Author: "+reviewObjects.get(i).author+": "+ reviewObjects.get(i).review);
+                        reviewTextView.setText("Author: "+reviewObjects.get(i).author+": "+ reviewObjects.get(i).review);
                     }
                 }
 
