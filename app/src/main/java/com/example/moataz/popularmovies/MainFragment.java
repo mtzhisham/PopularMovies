@@ -52,7 +52,8 @@ public class MainFragment extends Fragment  {
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
 
     ArrayList<MovieObject> movieObjects = new ArrayList<>();
-
+    ArrayList<String> PosterDB = new ArrayList<>();
+    ArrayList<String> IDDB = new ArrayList<>();
     ArrayList<String> moviePosters = new ArrayList<>();
     CustomMoviesAdapter customMoviesAdapter;
     GridView gv;
@@ -65,6 +66,7 @@ public class MainFragment extends Fragment  {
     String userCount="vote_count.desc";
     String SelectedCount=defaultUserCount;
     int rowNum;
+   boolean mDB = false;
     boolean hasConnection=true;
      final Uri CONTENT_URL =
             Uri.parse("content://com.example.moataz.popularmovies.MoviesProvider/cpmovies");
@@ -90,7 +92,18 @@ public class MainFragment extends Fragment  {
     }
     @Override
     public void onSaveInstanceState(Bundle outState) {
+
+       if (mDB) {
+           outState.putString("moviesDB", favoriteMovies);
+           outState.putStringArrayList("IDDB", IDDB);
+           outState.putStringArrayList("PosterDB",PosterDB);
+
+           Log.d("the state", "DB");
+
+       }else{
         outState.putParcelableArrayList("movies", movieObjects);
+           Log.d("the state","movies");}
+
         super.onSaveInstanceState(outState);
     }
 
@@ -106,7 +119,7 @@ public class MainFragment extends Fragment  {
         networkDialog.setTitle("Not Connected");
         networkDialog.setMessage("Please connect to internet to proceed");
         networkDialog.setCancelable(false);
-        networkDialog.setPositiveButton("Okay!",new DialogInterface.OnClickListener() {
+        networkDialog.setPositiveButton("Okay!", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
                 networkDialog.setCancelable(true);
@@ -124,7 +137,18 @@ public class MainFragment extends Fragment  {
             moviePosters.add(movieObjects.get(i).posterPath);
         }
         customMoviesAdapter.clear();;
+        customMoviesAdapter.notifyDataSetChanged();
         customMoviesAdapter.addAll(moviePosters);
+
+
+    }
+
+
+    public void drawPostersDB(){
+
+        customMoviesAdapter.clear();
+        customMoviesAdapter.notifyDataSetChanged();
+        customMoviesAdapter.addAll(PosterDB);
 
 
     }
@@ -137,12 +161,12 @@ public class MainFragment extends Fragment  {
         if(isOnline()) {
 
 
-            if (savedInstanceState == null || !savedInstanceState.containsKey("movies")) {
+            if (savedInstanceState == null ) {
                 FetchMoviesTask fetchMovies = new FetchMoviesTask();
                 fetchMovies.execute();
 
 
-            } else {
+            } else if(savedInstanceState.containsKey("movies")) {
                 movieObjects = savedInstanceState.getParcelableArrayList("movies");
                 final Handler handler = new Handler();
                 handler.post(new Runnable() {
@@ -150,6 +174,24 @@ public class MainFragment extends Fragment  {
                     public void run() {
 //                    FetchMoviesTask fetchMovies = new FetchMoviesTask();
                         drawPosters();
+
+                    }
+                });
+            } else if(savedInstanceState.containsKey("moviesDB")){
+
+                PosterDB = savedInstanceState.getStringArrayList("PosterDB");
+                IDDB   = savedInstanceState.getStringArrayList("IDDB");
+
+
+                final Handler handler = new Handler();
+                handler.post(new Runnable() {
+
+                    public void run() {
+
+                        SelectedSort = favoriteMovies;
+
+                        setSortToFavorite();
+                        drawPostersDB();
 
                     }
                 });
@@ -274,17 +316,12 @@ public class MainFragment extends Fragment  {
             public void onClick(View v) {
 //                  Toast.makeText(getActivity(), programFab2.getLabelText(), Toast.LENGTH_SHORT).show();
 
-                SelectedSort = favoriteMovies;
-                getMoviesFromDB();
 
-
-                Toast.makeText(getActivity(), "feh aflam:" +rowNum, Toast.LENGTH_SHORT).show();
-
-
+                setSortToFavorite();
+                drawPostersDB();
                 menu.close(true);
             }
         });
-
 
 
 
@@ -298,81 +335,112 @@ public class MainFragment extends Fragment  {
                 int index = (int) id;
 
 
+                if (SelectedSort == favoriteMovies)
+                {
+                    String idname = IDDB.get(index);
+                    Log.d("faortited id",position+" : "+ idname);
 
-                String movieID = String.valueOf(movieObjects.get(index).id);
-                String title = movieObjects.get(index).title;
-                String overview = movieObjects.get(index).overview;
-                double rating = movieObjects.get(index).rating;
-                String release = movieObjects.get(index).releaseDate;
-                String imageURL = movieObjects.get(index).posterPath;
 
-                Intent intent = new Intent(getActivity(), DetailActivity.class);
-                Bundle bundle = new Bundle();
 
-                Log.d("json before", "before json");
-                JSONObject json = new JSONObject();
-                try {
-                    json.put("movieID", movieID);
-                    json.put("title", title);
-                    json.put("release", release);
-                    json.put("overview", overview);
-                    json.put("rating", rating);
-                    json.put("imageURL", imageURL);
-                    Uri uri =   Uri.parse(json.toString());
-                    //send movie data goes here
-                    ((Callback) getActivity()).onItemSelected(uri);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+                } else {
+                    String movieID = String.valueOf(movieObjects.get(index).id);
+                    String title = movieObjects.get(index).title;
+                    String overview = movieObjects.get(index).overview;
+                    double rating = movieObjects.get(index).rating;
+                    String release = movieObjects.get(index).releaseDate;
+                    String imageURL = movieObjects.get(index).posterPath;
+
+                    Intent intent = new Intent(getActivity(), DetailActivity.class);
+                    Bundle bundle = new Bundle();
+
+                    Log.d("json before", "before json");
+                    JSONObject json = new JSONObject();
+                    try {
+                        json.put("movieID", movieID);
+                        json.put("title", title);
+                        json.put("release", release);
+                        json.put("overview", overview);
+                        json.put("rating", rating);
+                        json.put("imageURL", imageURL);
+                        Uri uri = Uri.parse(json.toString());
+                        //send movie data goes here
+                        ((Callback) getActivity()).onItemSelected(uri);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
 
 //                json.put("uniqueArrays", new JSONArray(items));
 //                String arrayList = json.toString();
 
-                Log.d("the pressed string", json.toString());
+                    Log.d("the pressed string", json.toString());
 //               startActivity(intent);
 
 
-
-
+                }
 
             }
-
-
 
         });
 
         return rootView;
     }
 
+
+
+    public void setSortToFavorite(){
+        SelectedSort = favoriteMovies;
+        mDB=true;
+        getMoviesFromDB();
+
+        Toast.makeText(getActivity(), "feh aflam:" +rowNum, Toast.LENGTH_SHORT).show();
+    }
+
     public void getMoviesFromDB(){
 
         // Projection contains the columns we want
-        String[] projection = new String[]{"id", "mDBID","poster","videos","movie"};
+        String[] projection = new String[]{"id", "mDBID","poster","videos","movie","reviews"};
 
         // Pass the URL, projection and I'll cover the other options below
         Cursor cursor = resolver.query(CONTENT_URL, projection, null, null, null);
 
         String movieList = "";
         rowNum = 0;
+        String movie="";
+
         // Cycle through and display every row of data
         if(cursor.moveToFirst()){
-
+PosterDB.clear();
             do{
 
                 String id = cursor.getString(cursor.getColumnIndex("id"));
-                String movie = cursor.getString(cursor.getColumnIndex("movie"));
+                movie = cursor.getString(cursor.getColumnIndex("movie"));
                 String idfromdb = cursor.getString(cursor.getColumnIndex("mDBID"));
+                String reviews = cursor.getString(cursor.getColumnIndex("reviews"));
 //                String Posterfromdb = cursor.getString(cursor.getColumnIndex("poster"));
                 byte[] blov = cursor.getBlob(cursor.getColumnIndex("poster"));
                 String Posterfromdb = blov.toString();
                 String videos = cursor.getString(cursor.getColumnIndex("videos"));
-                movieList = movieList + idfromdb+" : "+ id + " : "+videos+" : "+ Posterfromdb+" : "+ movie + "\n";
+                movieList = movieList + idfromdb+" : "+ id + " : "+ reviews + "\n";
                 rowNum=rowNum+1;
+                try {
+                    JSONObject JSONobj = new JSONObject(movie);
+                    String movieID=  JSONobj.getString("movieID");
+                    String imageURL=JSONobj.getString("imageURL");
+                    IDDB.add(idfromdb);
+                    PosterDB.add(imageURL);
+
+                } catch (Exception e)
+                {e.printStackTrace();}
+
+
+
             }while (cursor.moveToNext());
 
         }
         Log.d("movieDB",movieList);
         cursor.close();
+
+
 
     }
 

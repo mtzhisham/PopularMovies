@@ -162,7 +162,7 @@ public class DetailFragment extends Fragment {
 
         favorite = (ImageButton) rootView.findViewById(R.id.fav_btn);
 
-                 getMovieData();
+
 
 
                 titleTextView = (TextView) rootView.findViewById(R.id.title_textView);
@@ -526,7 +526,7 @@ public Bitmap getBitmap (ImageView imageView){
 
                 }
                 else {
-                    values.put("reviews", result);
+
 
                     ArrayList<ReviewObject> reviewObjects = new ArrayList<>();
                     reviewObjects.addAll(getTrailerDataFromJson(result));
@@ -592,6 +592,7 @@ public Bitmap getBitmap (ImageView imageView){
                     ReviewObject formatedReview = new ReviewObject(id,author, content);
                     arrayOfReviews.add(formatedReview);
                 }
+
                 return arrayOfReviews;
             }
 
