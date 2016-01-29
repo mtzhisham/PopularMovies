@@ -83,9 +83,11 @@ public class DetailFragment extends Fragment {
     TextView overviewTextView;
     TextView ratingTextView;
     TextView releaseDateTextView;
-    private Uri receiveMovie;
+    ImageButton favorite;
+    JSONObject receiveMovie;
+    Uri mUri;
+    String theURI;
 
-    Bundle b;
     public DetailFragment() {
     }
 
@@ -93,28 +95,57 @@ public class DetailFragment extends Fragment {
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        Intent intent = getActivity().getIntent();
-        b = intent.getExtras();
+
+
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+
+
+                Bundle arguments = getArguments();
+               if (arguments != null) {
+                        mUri = arguments.getParcelable(DetailFragment.gotdatafromargs);
+
+                   theURI =   mUri.toString();
+                 Log.d("uri", theURI);
+
+  }
+
+
+
         try {
-            JSONobj = new JSONObject(b.getString("json"));
+            JSONobj = new JSONObject(theURI);
 
             movieID=  JSONobj.getString("movieID");
-
+            Toast.makeText(getActivity(), movieID, Toast.LENGTH_SHORT).show();
             title= JSONobj.getString("title");
             release= JSONobj.getString("release");
             overview = JSONobj.getString("overview");
             rating=JSONobj.getString("rating");
             imageURL=JSONobj.getString("imageURL");
 
-            Log.d("onActivitycreated",b.getString("json"));
-
+//            Log.d("onActivitycreated", movieID + " : "+title);
+            Toast.makeText(getActivity(), movieID + " : "+title, Toast.LENGTH_SHORT).show();
         } catch (Exception e)
         {e.printStackTrace();}
+
+
+
+
+
+
+
     }
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+
+    public void getMovieData(){
+
+
+
+
 
 
     }
@@ -129,24 +160,13 @@ public class DetailFragment extends Fragment {
          values = new ContentValues();
 
 
+        favorite = (ImageButton) rootView.findViewById(R.id.fav_btn);
 
-                        Bundle arguments = getArguments();
-                if (arguments != null) {
-                        receiveMovie = arguments.getParcelable(DetailFragment.gotdatafromargs);
-
-                    Log.d("from detail fragment",receiveMovie.toString());
-                    Toast.makeText(getActivity(),"got "+receiveMovie.toString(),Toast.LENGTH_SHORT).show();
-                    }
-
-
-
-
-
-
+                 getMovieData();
 
 
                 titleTextView = (TextView) rootView.findViewById(R.id.title_textView);
-                titleTextView.setText(title);
+
 
                 listView = (ListView) rootView.findViewById(R.id.listview_videos);
                 mVideosAdapter =
@@ -171,61 +191,67 @@ public class DetailFragment extends Fragment {
         listView.setAdapter(mVideosAdapter);
         reviewTextView.setMovementMethod(new ScrollingMovementMethod());
 
+        if(movieID != null){
 
 
-          ImageButton favorite = (ImageButton) rootView.findViewById(R.id.fav_btn);
-//        favorite.setVisibility(View.VISIBLE);
-//
-//            if(lookupContact(movieID)){
-//                favorite.setSelected(true);
-//            Toast.makeText(getActivity(),"found it",Toast.LENGTH_SHORT).show();
-//            }else {
-//                favorite.setSelected(false);
-//                Toast.makeText(getActivity(),"not there",Toast.LENGTH_SHORT).show();
-//            }
-//
-//            favorite.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//
-//                    if (lookupContact(movieID)){
-//                        v.setSelected(false);
-//                        Toast.makeText(getActivity(),"already there shod be deleted",Toast.LENGTH_SHORT).show();
-//                        // Use the resolver to delete ids by passing the content provider url
-//                        // what you are targeting with the where and the string that replaces
-//                        // the ? in the where clause
-//                         resolver.delete(CONTENT_URL,
-//                                "mDBID = ? ", new String[]{movieID});
-//
-//
-//                    }
-//
-//                    else {
-//                        Toast.makeText(getActivity(),"not there added",Toast.LENGTH_SHORT).show();
-//                        v.setSelected(true);
-//                        values = new ContentValues();
-//                        values.put("movie", JSONobj.toString());
-//                        values.put("mDBID",movieID);
-//                        videoArrayJSON = jsonvid.toString();
-//                        values.put("videos",videoArrayJSON);
-//
-//
-//
-//                        DbBitmapUtility dbu = new DbBitmapUtility();
-//                        byte[] posterBytes = dbu.getBytes(getBitmap(posterImageView));
-//                        values.put("poster",posterBytes);
-//                        // Insert the value into the Content Provider
-//                        resolver.insert(CONTENT_URL, values);
-//
-//                        Toast.makeText(getActivity(), "New Movie Added", Toast.LENGTH_LONG)
-//                                .show();
-//                        v.setSelected(true);
-//                    }
-//
-//                    getContacts();
-//
-//                }
-//            });
+
+
+            if(lookupContact(movieID)){
+            favorite.setSelected(true);
+            Toast.makeText(getActivity(), "found it", Toast.LENGTH_SHORT).show();
+        }else {
+            favorite.setSelected(false);
+            Toast.makeText(getActivity(),"not there",Toast.LENGTH_SHORT).show();
+        }
+            setMovieData();
+
+        }
+
+
+
+
+            favorite.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                    if (lookupContact(movieID)){
+                        v.setSelected(false);
+                        Toast.makeText(getActivity(),"already there shod be deleted",Toast.LENGTH_SHORT).show();
+                        // Use the resolver to delete ids by passing the content provider url
+                        // what you are targeting with the where and the string that replaces
+                        // the ? in the where clause
+                         resolver.delete(CONTENT_URL,
+                                "mDBID = ? ", new String[]{movieID});
+
+
+                    }
+
+                    else {
+                        Toast.makeText(getActivity(),"not there added",Toast.LENGTH_SHORT).show();
+                        v.setSelected(true);
+                        values = new ContentValues();
+                        values.put("movie", JSONobj.toString());
+                        values.put("mDBID",movieID);
+                        videoArrayJSON = jsonvid.toString();
+                        values.put("videos",videoArrayJSON);
+
+
+
+                        DbBitmapUtility dbu = new DbBitmapUtility();
+                        byte[] posterBytes = dbu.getBytes(getBitmap(posterImageView));
+                        values.put("poster",posterBytes);
+                        // Insert the value into the Content Provider
+                        resolver.insert(CONTENT_URL, values);
+
+                        Toast.makeText(getActivity(), "New Movie Added", Toast.LENGTH_LONG)
+                                .show();
+                        v.setSelected(true);
+                    }
+
+                    getContacts();
+
+                }
+            });
 
 
 
@@ -236,7 +262,7 @@ public class DetailFragment extends Fragment {
     public void setMovieData (){
 
 
-
+        favorite.setVisibility(View.VISIBLE);
         FetchTrailerTask trilerVideosTask = new FetchTrailerTask();
         FetchTrailerTask trileReviewsTask = new FetchTrailerTask();
 
@@ -276,7 +302,7 @@ public Bitmap getBitmap (ImageView imageView){
     public boolean lookupContact(String movieID) {
 
         // The id we want to search for
-        String idToFind = movieID;
+
 
         // Holds the column data we want to retrieve
         String[] projection = new String[]{"id", "mDBID","poster","movie"};
@@ -285,7 +311,7 @@ public Bitmap getBitmap (ImageView imageView){
         // the where clause followed by the matches in an array for the ?
         // null is for sort order
         Cursor cursor = resolver.query(CONTENT_URL,
-                projection, "mDBID = ? ", new String[]{idToFind}, null);
+                projection, "mDBID = ? ", new String[]{movieID}, null);
 
         String movie = "";
 
@@ -298,10 +324,11 @@ public Bitmap getBitmap (ImageView imageView){
             byte[] blov = cursor.getBlob(cursor.getColumnIndex("poster"));
             String Posterfromdb = blov.toString();
             movie = movie +idfromdb+" : "+ id + " : "+Posterfromdb + " : " + moviefromdb + "\n";
-            Log.d("the movie",movie);
+            Log.d("the movie", movie);
+            cursor.close();
            return true;
         }else{
-
+            cursor.close();
             return false;
         }
 
@@ -312,7 +339,7 @@ public Bitmap getBitmap (ImageView imageView){
     }
 
 
-
+;
     public void getContacts(){
 
         // Projection contains the columns we want
@@ -338,7 +365,7 @@ public Bitmap getBitmap (ImageView imageView){
                 movieList = movieList + idfromdb+" : "+ id + " : "+videos+" : "+ Posterfromdb+" : "+ movie + "\n";
 
             }while (cursor.moveToNext());
-
+            cursor.close();
         }
  Log.d("movieDB",movieList);
 

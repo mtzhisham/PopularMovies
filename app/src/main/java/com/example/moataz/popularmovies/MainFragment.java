@@ -1,14 +1,19 @@
 package com.example.moataz.popularmovies;
 
 import android.content.ContentResolver;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -18,6 +23,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.GridView;
+import android.widget.Toast;
 
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
@@ -32,7 +38,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.sql.Blob;
 import java.util.ArrayList;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -59,6 +64,8 @@ public class MainFragment extends Fragment  {
     String defaultUserCount = "";
     String userCount="vote_count.desc";
     String SelectedCount=defaultUserCount;
+    int rowNum;
+    boolean hasConnection=true;
      final Uri CONTENT_URL =
             Uri.parse("content://com.example.moataz.popularmovies.MoviesProvider/cpmovies");
 
@@ -75,7 +82,7 @@ public class MainFragment extends Fragment  {
                 /**
                  * DetailFragmentCallback for when an item has been selected.
                   */
-                        public void onItemSelected(String msg);
+                        public void onItemSelected(Uri msg);
             }
 
 
@@ -85,6 +92,29 @@ public class MainFragment extends Fragment  {
     public void onSaveInstanceState(Bundle outState) {
         outState.putParcelableArrayList("movies", movieObjects);
         super.onSaveInstanceState(outState);
+    }
+
+    public boolean isOnline() {
+        ConnectivityManager cm = (ConnectivityManager)
+                getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+        if (netInfo != null && netInfo.isConnectedOrConnecting()) {
+            return true;
+        }
+
+        final AlertDialog.Builder networkDialog = new AlertDialog.Builder(getActivity());
+        networkDialog.setTitle("Not Connected");
+        networkDialog.setMessage("Please connect to internet to proceed");
+        networkDialog.setCancelable(false);
+        networkDialog.setPositiveButton("Okay!",new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                networkDialog.setCancelable(true);
+            }
+        });
+        networkDialog.create().show();
+
+        return false;
     }
 
 
@@ -104,24 +134,27 @@ public class MainFragment extends Fragment  {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(false);
 
-        if (savedInstanceState ==null || !savedInstanceState.containsKey("movies")){
-            FetchMoviesTask fetchMovies = new FetchMoviesTask();
-            fetchMovies.execute();
+        if(isOnline()) {
 
 
-        } else {
-            movieObjects = savedInstanceState.getParcelableArrayList("movies");
-            final Handler handler = new Handler();
-            handler.post(new Runnable(){
+            if (savedInstanceState == null || !savedInstanceState.containsKey("movies")) {
+                FetchMoviesTask fetchMovies = new FetchMoviesTask();
+                fetchMovies.execute();
 
-                public void run(){
+
+            } else {
+                movieObjects = savedInstanceState.getParcelableArrayList("movies");
+                final Handler handler = new Handler();
+                handler.post(new Runnable() {
+
+                    public void run() {
 //                    FetchMoviesTask fetchMovies = new FetchMoviesTask();
-                    drawPosters();
+                        drawPosters();
 
-                }
-            });
+                    }
+                });
+            }
         }
-
 
     }
 
@@ -215,8 +248,11 @@ public class MainFragment extends Fragment  {
 //                  Toast.makeText(getActivity(), programFab1.getLabelText(), Toast.LENGTH_SHORT).show();
                     SelectedSort = popMovies;
                     SelectedCount = defaultUserCount;
-                    FetchMoviesTask fetchMovies = new FetchMoviesTask();
-                    fetchMovies.execute();
+
+                   if (isOnline()) {
+                       FetchMoviesTask fetchMovies = new FetchMoviesTask();
+                       fetchMovies.execute();
+                   }
                     menu.close(true);
                 }
             });
@@ -226,8 +262,10 @@ public class MainFragment extends Fragment  {
 //                  Toast.makeText(getActivity(), programFab2.getLabelText(), Toast.LENGTH_SHORT).show();
                     SelectedSort = highestRateMovies;
                     SelectedCount = userCount;
-                    FetchMoviesTask fetchMovies = new FetchMoviesTask();
-                    fetchMovies.execute();
+                    if (isOnline()) {
+                        FetchMoviesTask fetchMovies = new FetchMoviesTask();
+                        fetchMovies.execute();
+                    }
                     menu.close(true);
                 }
             });
@@ -239,16 +277,8 @@ public class MainFragment extends Fragment  {
                 SelectedSort = favoriteMovies;
                 getMoviesFromDB();
 
-//                CustomMoviesAdapter blobsMoviesAdapter = new CustomMoviesAdapter(getContext(),new ArrayList<String>(),"blobs");
-//                gv = (GridView) rootView.findViewById(R.id.movies_grid);
-//                gv.setAdapter(blobsMoviesAdapter);
-//                blobsMoviesAdapter.clear();;
-//                blobsMoviesAdapter.addAll();
 
-                CustomDBPosterAdapter blobsMoviesAdapter = new CustomDBPosterAdapter(getContext(), new ArrayList<Blob>());
-                gv.setAdapter(blobsMoviesAdapter);
-
-
+                Toast.makeText(getActivity(), "feh aflam:" +rowNum, Toast.LENGTH_SHORT).show();
 
 
                 menu.close(true);
@@ -277,6 +307,7 @@ public class MainFragment extends Fragment  {
                 String imageURL = movieObjects.get(index).posterPath;
 
                 Intent intent = new Intent(getActivity(), DetailActivity.class);
+                Bundle bundle = new Bundle();
 
                 Log.d("json before", "before json");
                 JSONObject json = new JSONObject();
@@ -287,7 +318,9 @@ public class MainFragment extends Fragment  {
                     json.put("overview", overview);
                     json.put("rating", rating);
                     json.put("imageURL", imageURL);
-                    intent.putExtra("json", json.toString());
+                    Uri uri =   Uri.parse(json.toString());
+                    //send movie data goes here
+                    ((Callback) getActivity()).onItemSelected(uri);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -298,7 +331,7 @@ public class MainFragment extends Fragment  {
                 Log.d("the pressed string", json.toString());
 //               startActivity(intent);
 
-                ((Callback) getActivity()).onItemSelected("got it from main fragment"+movieID);
+
 
 
 
@@ -320,7 +353,7 @@ public class MainFragment extends Fragment  {
         Cursor cursor = resolver.query(CONTENT_URL, projection, null, null, null);
 
         String movieList = "";
-
+        rowNum = 0;
         // Cycle through and display every row of data
         if(cursor.moveToFirst()){
 
@@ -334,12 +367,12 @@ public class MainFragment extends Fragment  {
                 String Posterfromdb = blov.toString();
                 String videos = cursor.getString(cursor.getColumnIndex("videos"));
                 movieList = movieList + idfromdb+" : "+ id + " : "+videos+" : "+ Posterfromdb+" : "+ movie + "\n";
-
+                rowNum=rowNum+1;
             }while (cursor.moveToNext());
 
         }
         Log.d("movieDB",movieList);
-
+        cursor.close();
 
     }
 

@@ -77,15 +77,17 @@ public class MainActivity extends AppCompatActivity  implements MainFragment.Cal
 
 
     @Override
-    public void onItemSelected(String msg) {
-Log.d("from main activity: ","i was selected");
+    public void onItemSelected(Uri msg) {
+Log.d("from main activity: ", "i was selected");
         Toast.makeText(this, "got " + "from main activity: "+"i was selected", Toast.LENGTH_SHORT).show();
+
+
         if (mTwoPane) {
                         // In two-pane mode, show the detail view in this activity by
                                 // adding or replacing the detail fragment using a
                                         // fragment transaction.
-                                    Bundle args = new Bundle();
-            args.putString(DetailFragment.gotdatafromargs,msg);
+            Bundle args = new Bundle();
+            args.putParcelable(DetailFragment.gotdatafromargs, msg);
 
                     DetailFragment fragment = new DetailFragment();
             fragment.setArguments(args);
@@ -95,8 +97,7 @@ Log.d("from main activity: ","i was selected");
                     .commit();
 
         } else {
-            Intent intent = new Intent(this, DetailActivity.class)
-                    .setData(Uri.parse(msg));
+            Intent intent = new Intent(this, DetailActivity.class).setData(msg);
             startActivity(intent);
 
         }
