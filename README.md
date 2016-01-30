@@ -19,3 +19,5 @@ com.facebook.stetho:stetho:1.3.0
 for debuging
 
 all adedd in the build.gradle dependencies
+
+Launcher icons from http://romannurik.github.io/AndroidAssetStudio/
