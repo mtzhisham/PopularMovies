@@ -4,10 +4,6 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -16,6 +12,9 @@ import android.support.v4.content.CursorLoader;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -85,53 +84,36 @@ public class DetailFragment extends Fragment {
     TextView releaseDateTextView;
     ImageButton favorite;
     JSONObject receiveMovie;
+    String movieFromFavorie;
     Uri mUri;
     String theURI;
+    ArrayList<String> videokeyArray;
 
     public DetailFragment() {
     }
 
-    @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-
-
-
-    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-
+        resolver = getActivity().getContentResolver();
+        values = new ContentValues();
 
                 Bundle arguments = getArguments();
                if (arguments != null) {
                         mUri = arguments.getParcelable(DetailFragment.gotdatafromargs);
 
                    theURI =   mUri.toString();
+                   setHasOptionsMenu(true);
                  Log.d("uri", theURI);
 
   }
 
 
+    setMovieData();
 
-        try {
-            JSONobj = new JSONObject(theURI);
-
-            movieID=  JSONobj.getString("movieID");
-            Toast.makeText(getActivity(), movieID, Toast.LENGTH_SHORT).show();
-            title= JSONobj.getString("title");
-            release= JSONobj.getString("release");
-            overview = JSONobj.getString("overview");
-            rating=JSONobj.getString("rating");
-            imageURL=JSONobj.getString("imageURL");
-
-//            Log.d("onActivitycreated", movieID + " : "+title);
-            Toast.makeText(getActivity(), movieID + " : "+title, Toast.LENGTH_SHORT).show();
-        } catch (Exception e)
-        {e.printStackTrace();}
-
+//        Log.d("uri2", theURI);
 
 
 
@@ -140,11 +122,87 @@ public class DetailFragment extends Fragment {
 
     }
 
+public void setMovieData(){
 
-    public void getMovieData(){
+    movieID = theURI;
+    if (movieID!= null){
+    if (lookupContact(movieID)){
+
+        try {
+            JSONobj = new JSONObject(movieFromFavorie);
+
+            movieID = JSONobj.getString("movieID");
+            Toast.makeText(getActivity(), movieID, Toast.LENGTH_SHORT).show();
+            title = JSONobj.getString("title");
+            release = JSONobj.getString("release");
+            overview = JSONobj.getString("overview");
+            rating = JSONobj.getString("rating");
+            imageURL = JSONobj.getString("imageURL");
+            Log.d("uri3", theURI);
+//            Log.d("onActivitycreated", movieID + " : "+title);
+            Toast.makeText(getActivity(), movieID + " : " + title, Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
 
 
+
+
+
+    }
+
+    else {
+
+        try {
+            JSONobj = new JSONObject(theURI);
+
+            movieID = JSONobj.getString("movieID");
+            Toast.makeText(getActivity(), movieID, Toast.LENGTH_SHORT).show();
+            title = JSONobj.getString("title");
+            release = JSONobj.getString("release");
+            overview = JSONobj.getString("overview");
+            rating = JSONobj.getString("rating");
+            imageURL = JSONobj.getString("imageURL");
+
+//            Log.d("onActivitycreated", movieID + " : "+title);
+            Toast.makeText(getActivity(), movieID + " : " + title, Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }}
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        menu.clear();
+        inflater.inflate(R.menu.menu_detail, menu);
+    }
+
+
+
+
+
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        int id = item.getItemId();
+
+
+        if (id == R.id.action_share) {
+
+
+            String videokey = videokeyArray.get(0);
+            final String urlStr = "http://www.youtube.com/watch?v="+videokey;
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(Uri.parse(urlStr));
+            startActivity(intent);
+        }
+
+        return super.onOptionsItemSelected(item);
 
 
 
@@ -156,8 +214,7 @@ public class DetailFragment extends Fragment {
 
 
         View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
-        resolver = getActivity().getContentResolver();
-         values = new ContentValues();
+
 
 
         favorite = (ImageButton) rootView.findViewById(R.id.fav_btn);
@@ -203,7 +260,7 @@ public class DetailFragment extends Fragment {
             favorite.setSelected(false);
             Toast.makeText(getActivity(),"not there",Toast.LENGTH_SHORT).show();
         }
-            setMovieData();
+            setMovieDataViews();
 
         }
 
@@ -237,9 +294,7 @@ public class DetailFragment extends Fragment {
 
 
 
-                        DbBitmapUtility dbu = new DbBitmapUtility();
-                        byte[] posterBytes = dbu.getBytes(getBitmap(posterImageView));
-                        values.put("poster",posterBytes);
+
                         // Insert the value into the Content Provider
                         resolver.insert(CONTENT_URL, values);
 
@@ -259,7 +314,7 @@ public class DetailFragment extends Fragment {
     }
 
 
-    public void setMovieData (){
+    public void setMovieDataViews(){
 
 
         favorite.setVisibility(View.VISIBLE);
@@ -284,19 +339,8 @@ public class DetailFragment extends Fragment {
     }
 
 
-public Bitmap getBitmap (ImageView imageView){
-    Bitmap bitmap;
-    if (imageView.getDrawable() instanceof BitmapDrawable) {
-        bitmap = ((BitmapDrawable) imageView.getDrawable()).getBitmap();
-    } else {
-        Drawable d = imageView.getDrawable();
-        bitmap = Bitmap.createBitmap(d.getIntrinsicWidth(), d.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(bitmap);
-        d.draw(canvas);
-    }
 
-    return bitmap;
-}
+
 
 
     public boolean lookupContact(String movieID) {
@@ -324,6 +368,10 @@ public Bitmap getBitmap (ImageView imageView){
             byte[] blov = cursor.getBlob(cursor.getColumnIndex("poster"));
             String Posterfromdb = blov.toString();
             movie = movie +idfromdb+" : "+ id + " : "+Posterfromdb + " : " + moviefromdb + "\n";
+            movieFromFavorie = moviefromdb;
+
+
+
             Log.d("the movie", movie);
             cursor.close();
            return true;
@@ -470,7 +518,7 @@ public Bitmap getBitmap (ImageView imageView){
 
         @Override
         protected void onPostExecute(String result) {
-            Intent tr = new Intent();
+
 
 
             try {
@@ -483,7 +531,7 @@ public Bitmap getBitmap (ImageView imageView){
                     int trailerCount = trailerObjects.size();
                     final ArrayList<TrailerObject> videoArray= new ArrayList<>();
                     ArrayList<String> videoNAme = new ArrayList<>();
-                    final ArrayList<String> videokeyArray = new ArrayList<>();
+                    videokeyArray = new ArrayList<>();
 
 
                     if ( videoArray.isEmpty()){
@@ -502,8 +550,8 @@ public Bitmap getBitmap (ImageView imageView){
                         jsonvid.put("videoNameArray", new JSONArray(videoNAme));
                         jsonvid.put("videoKeyArray", new JSONArray(videokeyArray));
 
-                        ;
-                        Log.d("JSONVIDEOS", videoArrayJSON);
+
+
 
 
                     } catch (Exception e){
@@ -531,7 +579,7 @@ public Bitmap getBitmap (ImageView imageView){
                     ArrayList<ReviewObject> reviewObjects = new ArrayList<>();
                     reviewObjects.addAll(getTrailerDataFromJson(result));
                     int reviewCount = reviewObjects.size();
-
+                    //get the latest review
                     for (int i = 0; i < reviewCount; i++) {
                         Log.d("from TRAILER OBJECT", reviewObjects.get(i).author + reviewObjects.get(i).review);
 
@@ -562,10 +610,10 @@ public Bitmap getBitmap (ImageView imageView){
 
             ArrayList<TrailerObject> arrayOfTrailers = new ArrayList<>();
             ArrayList<ReviewObject> arrayOfReviews = new ArrayList<>();
-            Log.d("TASK trailer", trailerJson.toString());
+
             int numberOfTrailers = trailerArray.length();
 
-            Log.d("TASK num videos thione",String.valueOf(numberOfTrailers) );
+
 
             if(returnTybe == "videos"){
                 for (int i = 0; i < numberOfTrailers; i++) {

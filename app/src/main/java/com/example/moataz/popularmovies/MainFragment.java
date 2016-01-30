@@ -16,9 +16,6 @@ import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -205,37 +202,37 @@ public class MainFragment extends Fragment  {
 
 
 
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        super.onCreateOptionsMenu(menu, inflater);
-            inflater.inflate(R.menu.menu_fragment, menu);
+//    @Override
+//    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+//        super.onCreateOptionsMenu(menu, inflater);
+//            inflater.inflate(R.menu.menu_fragment, menu);
+//
+//
+//    }
+//
+//
+//
+//
+//
+//
+//    @Override
+//    public boolean onOptionsItemSelected(MenuItem item) {
+//
+//        int id = item.getItemId();
+//
+//
+//        if (id == R.id.action_sort) {
+//
+//
+//
+//            return true;
+//        }
+//
+//        return super.onOptionsItemSelected(item);
 
 
-    }
 
-
-
-
-
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-
-        int id = item.getItemId();
-
-
-        if (id == R.id.action_sort) {
-
-
-
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-
-
-
-    }
+//    }
 
 
 
@@ -338,8 +335,10 @@ public class MainFragment extends Fragment  {
                 if (SelectedSort == favoriteMovies)
                 {
                     String idname = IDDB.get(index);
-                    Log.d("faortited id",position+" : "+ idname);
-
+                    Log.d("faortited id",index+" : "+ idname);
+                    Uri uri = Uri.parse(idname);
+                    //send movie data goes here
+                    ((Callback) getActivity()).onItemSelected(uri);
 
 
                 } else {
@@ -410,6 +409,7 @@ public class MainFragment extends Fragment  {
         // Cycle through and display every row of data
         if(cursor.moveToFirst()){
 PosterDB.clear();
+IDDB.clear();
             do{
 
                 String id = cursor.getString(cursor.getColumnIndex("id"));
