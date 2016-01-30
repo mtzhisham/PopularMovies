@@ -4,6 +4,7 @@
     android:background="@color/backgrounddark"
     android:scrollbarStyle="outsideOverlay"
 
+
     >
 
 
@@ -98,17 +99,19 @@
 
 
         <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_width="237dp"
+            android:layout_height="wrap_content"
+            android:padding="16dp"
+            android:layout_weight="0"
+            android:layout_gravity="center_horizontal">
 
             <ListView
-                android:padding="26dp"
+                android:padding="16dp"
                 android:id="@+id/listview_videos"
                 android:layout_width="match_parent"
                 android:layout_height="130dp"
                 />
         </FrameLayout>
-
 
 
 

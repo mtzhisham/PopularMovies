@@ -8,13 +8,12 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.CursorLoader;
 import android.text.method.ScrollingMovementMethod;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -22,6 +21,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -46,27 +46,22 @@ import javax.net.ssl.HttpsURLConnection;
  */
 public class DetailFragment extends Fragment {
 
-    ArrayList<TrailerObject> trailerObjects = new ArrayList<>();
-    ArrayList<ReviewObject> reviewObjects = new ArrayList<>();
+
     ListView listView;
-    TextView videoName;
     TextView reviewTextView;
     ArrayAdapter mVideosAdapter;
-    ArrayAdapter<String> itemsAdapter;
-
+    ArrayList<String> videoNamesDB;
     // The URL used to target the content provider
     static final Uri CONTENT_URL =
             Uri.parse("content://com.example.moataz.popularmovies.MoviesProvider/cpmovies");
 
     static final String gotdatafromargs="args ddata is here";
-    CursorLoader cursorLoader;
 
-    // Provides access to other applications Content Providers
+
+
     ContentResolver resolver;
-
     JSONObject JSONobj;
-
-
+    StringBuilder allTheReviews;
     String movieID;
     String title;
     String overview;
@@ -74,7 +69,6 @@ public class DetailFragment extends Fragment {
     String rating;
     String imageURL;
     ImageView posterImageView;
-    String mDBID;
     ContentValues values;
     JSONObject jsonvid;
     String videoArrayJSON;
@@ -83,7 +77,6 @@ public class DetailFragment extends Fragment {
     TextView ratingTextView;
     TextView releaseDateTextView;
     ImageButton favorite;
-    JSONObject receiveMovie;
     String movieFromFavorie;
     Uri mUri;
     String theURI;
@@ -92,65 +85,79 @@ public class DetailFragment extends Fragment {
     public DetailFragment() {
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+       outState.putParcelable("theUri", mUri);
+
+
+        super.onSaveInstanceState(outState);
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         resolver = getActivity().getContentResolver();
         values = new ContentValues();
+        Bundle arguments = getArguments();
+        if (savedInstanceState != null ) {
 
-                Bundle arguments = getArguments();
-               if (arguments != null) {
+           Uri uri = savedInstanceState.getParcelable("theUri");
+            if (uri != null) {
+//                theURI = uri.toString();
+
+                setHasOptionsMenu(true);
+                if (arguments != null) {
+                    mUri = arguments.getParcelable(DetailFragment.gotdatafromargs);
+                    theURI =   mUri.toString();
+                    setHasOptionsMenu(true);
+
+                }
+            }
+
+        }
+else {
+            if (arguments != null) {
                         mUri = arguments.getParcelable(DetailFragment.gotdatafromargs);
-
-                   theURI =   mUri.toString();
+                        theURI =   mUri.toString();
                    setHasOptionsMenu(true);
-                 Log.d("uri", theURI);
+
+
 
   }
 
+        }
 
-    setMovieData();
-
-//        Log.d("uri2", theURI);
-
+        setMovieData();
 
 
 
-
-
-    }
+ }
 
 public void setMovieData(){
 
     movieID = theURI;
     if (movieID!= null){
-    if (lookupContact(movieID)){
+
+    if ( lookupMovies(movieID)){
 
         try {
             JSONobj = new JSONObject(movieFromFavorie);
 
             movieID = JSONobj.getString("movieID");
-            Toast.makeText(getActivity(), movieID, Toast.LENGTH_SHORT).show();
+
             title = JSONobj.getString("title");
             release = JSONobj.getString("release");
             overview = JSONobj.getString("overview");
             rating = JSONobj.getString("rating");
             imageURL = JSONobj.getString("imageURL");
-            Log.d("uri3", theURI);
-//            Log.d("onActivitycreated", movieID + " : "+title);
-            Toast.makeText(getActivity(), movieID + " : " + title, Toast.LENGTH_SHORT).show();
-        } catch (Exception e) {
-            e.printStackTrace();
+
+            }
+               catch(Exception e){
+                e.printStackTrace();
+            }
+
+
         }
-
-
-
-
-
-
-    }
 
     else {
 
@@ -158,15 +165,15 @@ public void setMovieData(){
             JSONobj = new JSONObject(theURI);
 
             movieID = JSONobj.getString("movieID");
-            Toast.makeText(getActivity(), movieID, Toast.LENGTH_SHORT).show();
+
             title = JSONobj.getString("title");
             release = JSONobj.getString("release");
             overview = JSONobj.getString("overview");
             rating = JSONobj.getString("rating");
             imageURL = JSONobj.getString("imageURL");
 
-//            Log.d("onActivitycreated", movieID + " : "+title);
-            Toast.makeText(getActivity(), movieID + " : " + title, Toast.LENGTH_SHORT).show();
+
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -229,11 +236,11 @@ public void setMovieData(){
                 mVideosAdapter =
                         new ArrayAdapter<String>(getActivity(), R.layout.video_list_item, R.id.list_item_video_textview, new ArrayList<String>());
                 listView.setAdapter(mVideosAdapter);
+        makeMyScrollSmart(listView);
 
 
-//                videoName = (TextView) rootView.findViewById(R.id.videoLink_tv);
             reviewTextView = (TextView) rootView.findViewById(R.id.review_textView);
-
+              makeMyScrollSmart(reviewTextView);
 
                 overviewTextView = (TextView) rootView.findViewById(R.id.overview_textView);
 
@@ -253,12 +260,12 @@ public void setMovieData(){
 
 
 
-            if(lookupContact(movieID)){
+            if( lookupMovies(movieID)){
             favorite.setSelected(true);
-            Toast.makeText(getActivity(), "found it", Toast.LENGTH_SHORT).show();
+
         }else {
             favorite.setSelected(false);
-            Toast.makeText(getActivity(),"not there",Toast.LENGTH_SHORT).show();
+
         }
             setMovieDataViews();
 
@@ -271,39 +278,25 @@ public void setMovieData(){
                 @Override
                 public void onClick(View v) {
 
-                    if (lookupContact(movieID)){
+                    if ( lookupMovies(movieID)) {
                         v.setSelected(false);
-                        Toast.makeText(getActivity(),"already there shod be deleted",Toast.LENGTH_SHORT).show();
-                        // Use the resolver to delete ids by passing the content provider url
-                        // what you are targeting with the where and the string that replaces
-                        // the ? in the where clause
-                         resolver.delete(CONTENT_URL,
+                        Toast.makeText(getActivity(), "Removed from favorites", Toast.LENGTH_SHORT).show();
+
+                        resolver.delete(CONTENT_URL,
                                 "mDBID = ? ", new String[]{movieID});
 
 
-                    }
-
-                    else {
-                        Toast.makeText(getActivity(),"not there added",Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getActivity(), "Favorited", Toast.LENGTH_SHORT).show();
                         v.setSelected(true);
                         values = new ContentValues();
                         values.put("movie", JSONobj.toString());
-                        values.put("mDBID",movieID);
+                        values.put("mDBID", movieID);
                         videoArrayJSON = jsonvid.toString();
-                        values.put("videos",videoArrayJSON);
-
-
-
-
-                        // Insert the value into the Content Provider
                         resolver.insert(CONTENT_URL, values);
-
-                        Toast.makeText(getActivity(), "New Movie Added", Toast.LENGTH_LONG)
-                                .show();
                         v.setSelected(true);
                     }
 
-                    getContacts();
 
                 }
             });
@@ -329,97 +322,64 @@ public void setMovieData(){
         overviewTextView.setText(overview);
         ratingTextView.setText(rating);
         releaseDateTextView.setText(release);
-        Picasso.with(getActivity()) //
-                .load(imageURL) //
-                        //
-                .error(R.drawable.error) //
-                .fit() //
-                .tag(getActivity()) //
+        Picasso.with(getActivity())
+                .load(imageURL)
+
+                .error(R.drawable.error)
+                .fit()
+                .tag(getActivity())
                 .into(posterImageView);
     }
 
 
+    private void makeMyScrollSmart(View view) {
+        view.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View __v, MotionEvent __event) {
+                if (__event.getAction() == MotionEvent.ACTION_DOWN) {
+                    //  Disallow the touch request for parent scroll on touch of child view
+                    requestDisallowParentInterceptTouchEvent(__v, true);
+                } else if (__event.getAction() == MotionEvent.ACTION_UP || __event.getAction() == MotionEvent.ACTION_CANCEL) {
+                    // Re-allows parent events
+                    requestDisallowParentInterceptTouchEvent(__v, false);
+                }
+                return false;
+            }
+        });
+    }
+
+    private void requestDisallowParentInterceptTouchEvent(View __v, Boolean __disallowIntercept) {
+        while (__v.getParent() != null && __v.getParent() instanceof View) {
+            if (__v.getParent() instanceof ScrollView) {
+                __v.getParent().requestDisallowInterceptTouchEvent(__disallowIntercept);
+            }
+            __v = (View) __v.getParent();
+        }
+    }
 
 
 
-
-    public boolean lookupContact(String movieID) {
-
-        // The id we want to search for
+    public boolean lookupMovies(String movieID) {
 
 
-        // Holds the column data we want to retrieve
-        String[] projection = new String[]{"id", "mDBID","poster","movie"};
+        String[] projection = new String[]{"id", "mDBID","movie"};
 
-        // Pass the URL for Content Provider, the projection,
-        // the where clause followed by the matches in an array for the ?
-        // null is for sort order
+
         Cursor cursor = resolver.query(CONTENT_URL,
                 projection, "mDBID = ? ", new String[]{movieID}, null);
 
-        String movie = "";
 
-        // Cycle through our one result or print error
         if(cursor.moveToFirst()){
-
-            String id = cursor.getString(cursor.getColumnIndex("id"));
             String moviefromdb = cursor.getString(cursor.getColumnIndex("movie"));
-            String idfromdb = cursor.getString(cursor.getColumnIndex("mDBID"));
-            byte[] blov = cursor.getBlob(cursor.getColumnIndex("poster"));
-            String Posterfromdb = blov.toString();
-            movie = movie +idfromdb+" : "+ id + " : "+Posterfromdb + " : " + moviefromdb + "\n";
             movieFromFavorie = moviefromdb;
 
-
-
-            Log.d("the movie", movie);
             cursor.close();
-           return true;
+            return true;
         }else{
             cursor.close();
-            return false;
+           return false;
         }
-
-
-
-
-
-    }
-
-
-;
-    public void getContacts(){
-
-        // Projection contains the columns we want
-        String[] projection = new String[]{"id", "mDBID","poster","videos","movie"};
-
-        // Pass the URL, projection and I'll cover the other options below
-        Cursor cursor = resolver.query(CONTENT_URL, projection, null, null, null);
-
-        String movieList = "";
-
-        // Cycle through and display every row of data
-        if(cursor.moveToFirst()){
-
-            do{
-
-                String id = cursor.getString(cursor.getColumnIndex("id"));
-                String movie = cursor.getString(cursor.getColumnIndex("movie"));
-                String idfromdb = cursor.getString(cursor.getColumnIndex("mDBID"));
-//                String Posterfromdb = cursor.getString(cursor.getColumnIndex("poster"));
-                byte[] blov = cursor.getBlob(cursor.getColumnIndex("poster"));
-                String Posterfromdb = blov.toString();
-                String videos = cursor.getString(cursor.getColumnIndex("videos"));
-                movieList = movieList + idfromdb+" : "+ id + " : "+videos+" : "+ Posterfromdb+" : "+ movie + "\n";
-
-            }while (cursor.moveToNext());
-            cursor.close();
-        }
- Log.d("movieDB",movieList);
-
-
-    }
-
+ }
 
 
     public class FetchTrailerTask extends AsyncTask<String, Void, String> {
@@ -429,9 +389,6 @@ public void setMovieData(){
 
         Uri builtUri;
         URL url;
-
-        Uri builtReviewUri;
-        URL trailerUrl;
 
         String returnTybe;
 
@@ -447,8 +404,6 @@ public void setMovieData(){
             try {
                 final String BASE_URL = "https://api.themoviedb.org/3/movie/";
 
-
-
                 final String APIKEY_PARAM = "api_key";
 
                 builtUri = Uri.parse(BASE_URL).buildUpon().appendPath(movieID).appendPath(returnTybe)
@@ -456,13 +411,8 @@ public void setMovieData(){
                         .build();
 
 
-
-
-
-
-
                 url = new URL(builtUri.toString());
-                Log.d("the url: ", url.toString());
+
                 urlConnection = (HttpsURLConnection) url.openConnection();
                 urlConnection.setRequestMethod("GET");
                 urlConnection.connect();
@@ -485,13 +435,13 @@ public void setMovieData(){
                 }
 
                 if (buffer.length() == 0) {
-                    // Stream was empty.  No point in parsing.
+
                     trailerJsonStr = null;
                 }
                 trailerJsonStr = buffer.toString();
-                Log.v("TASK", "Movies JSON string" + trailerJsonStr);
+
             } catch (IOException e) {
-                Log.e("TASK", "Error", e);
+
                 trailerJsonStr = null;
 
             } finally {
@@ -502,12 +452,11 @@ public void setMovieData(){
                     try {
                         reader.close();
                     } catch (final IOException e) {
-                        Log.e("TASK", "Error closing stream", e);
+                      e.printStackTrace();
                     }
                 }
             }
 
-            Log.d("trailer josn ", trailerJsonStr);
             return trailerJsonStr;
 
         }
@@ -536,9 +485,8 @@ public void setMovieData(){
 
                     if ( videoArray.isEmpty()){
                     for (int i = 0; i < trailerCount; i++) {
-                        Log.d("from TRAILER OBJECT", trailerObjects.get(i).name + trailerObjects.get(i).key);
+
                         videoArray.add(trailerObjects.get(i));
-//                        videoName.setText(trailerObjects.get(i).name);
                         videokeyArray.add((videoArray.get(i).key)) ;
                         videoNAme.add(videoArray.get(i).name);
                     }}
@@ -558,36 +506,27 @@ public void setMovieData(){
                         e.printStackTrace();
                     }
 
-       listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-           @Override
-           public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-               String videokey = videokeyArray.get(position);
-               final String urlStr = "http://www.youtube.com/watch?v="+videokey;
-               Intent intent = new Intent(Intent.ACTION_VIEW);
-               intent.setData(Uri.parse(urlStr));
-                            startActivity(intent);
 
-           }
-       });
 
 
 
                 }
                 else {
 
-
+                    allTheReviews = new StringBuilder();
                     ArrayList<ReviewObject> reviewObjects = new ArrayList<>();
                     reviewObjects.addAll(getTrailerDataFromJson(result));
                     int reviewCount = reviewObjects.size();
-                    //get the latest review
-                    for (int i = 0; i < reviewCount; i++) {
-                        Log.d("from TRAILER OBJECT", reviewObjects.get(i).author + reviewObjects.get(i).review);
 
-                        reviewTextView.setText("Author: "+reviewObjects.get(i).author+": "+ reviewObjects.get(i).review);
+                    for (int i = 0; i < reviewCount; i++) {
+
+                        allTheReviews.append("Author: "+reviewObjects.get(i).author+": "+ reviewObjects.get(i).review);
                     }
+                    reviewTextView.setText(allTheReviews);
+                    makeMyScrollSmart(reviewTextView);
                 }
 
-
+                yTVideo();
 
 
 
@@ -601,6 +540,19 @@ public void setMovieData(){
 
         }
 
+        public void yTVideo(){
+            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    String videokey = videokeyArray.get(position);
+                    final String urlStr = "http://www.youtube.com/watch?v="+videokey;
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setData(Uri.parse(urlStr));
+                    startActivity(intent);
+
+                }
+            });
+        }
 
         private ArrayList getTrailerDataFromJson(String trailerJsonStr) throws JSONException {
 

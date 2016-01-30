@@ -3,7 +3,6 @@ package com.example.moataz.popularmovies;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
@@ -14,13 +13,11 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.GridView;
-import android.widget.Toast;
 
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
@@ -95,14 +92,14 @@ public class MainFragment extends Fragment  {
            outState.putStringArrayList("IDDB", IDDB);
            outState.putStringArrayList("PosterDB",PosterDB);
 
-           Log.d("the state", "DB");
+
 
        }else{
         outState.putParcelableArrayList("movies", movieObjects);
-           Log.d("the state","movies");}
+
 
         super.onSaveInstanceState(outState);
-    }
+    }}
 
     public boolean isOnline() {
         ConnectivityManager cm = (ConnectivityManager)
@@ -202,38 +199,6 @@ public class MainFragment extends Fragment  {
 
 
 
-//    @Override
-//    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-//        super.onCreateOptionsMenu(menu, inflater);
-//            inflater.inflate(R.menu.menu_fragment, menu);
-//
-//
-//    }
-//
-//
-//
-//
-//
-//
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//
-//        int id = item.getItemId();
-//
-//
-//        if (id == R.id.action_sort) {
-//
-//
-//
-//            return true;
-//        }
-//
-//        return super.onOptionsItemSelected(item);
-
-
-
-//    }
-
 
 
 
@@ -256,7 +221,7 @@ public class MainFragment extends Fragment  {
         final FloatingActionButton programFab1 = new FloatingActionButton(getActivity());
         programFab1.setButtonSize(FloatingActionButton.SIZE_MINI);
         programFab1.setLabelText("Popular Movies");
-        programFab1.setImageResource(R.drawable.ic_star);
+        programFab1.setImageResource(R.drawable.pop);
         programFab1.setColorNormal(Color.parseColor("#3F51B5"));
         menu.addMenuButton(programFab1);
 
@@ -264,14 +229,14 @@ public class MainFragment extends Fragment  {
         final FloatingActionButton programFab2 = new FloatingActionButton(getActivity());
         programFab2.setButtonSize(FloatingActionButton.SIZE_MINI);
         programFab2.setLabelText("Highest Rated Movies");
-        programFab2.setImageResource(R.drawable.ic_edit);
+        programFab2.setImageResource(R.drawable.rated);
         programFab2.setColorNormal(Color.parseColor("#3F51B5"));
         menu.addMenuButton(programFab2);
 
         final FloatingActionButton programFab3 = new FloatingActionButton(getActivity());
         programFab3.setButtonSize(FloatingActionButton.SIZE_MINI);
         programFab3.setLabelText("Favorite Movies");
-        programFab3.setImageResource(R.drawable.ic_star);
+        programFab3.setImageResource(R.drawable.fav);
         programFab3.setColorNormal(Color.parseColor("#3F51B5"));
         menu.addMenuButton(programFab3);
 
@@ -284,7 +249,7 @@ public class MainFragment extends Fragment  {
             programFab1.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-//                  Toast.makeText(getActivity(), programFab1.getLabelText(), Toast.LENGTH_SHORT).show();
+
                     SelectedSort = popMovies;
                     SelectedCount = defaultUserCount;
 
@@ -298,7 +263,7 @@ public class MainFragment extends Fragment  {
             programFab2.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-//                  Toast.makeText(getActivity(), programFab2.getLabelText(), Toast.LENGTH_SHORT).show();
+
                     SelectedSort = highestRateMovies;
                     SelectedCount = userCount;
                     if (isOnline()) {
@@ -311,7 +276,7 @@ public class MainFragment extends Fragment  {
         programFab3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                  Toast.makeText(getActivity(), programFab2.getLabelText(), Toast.LENGTH_SHORT).show();
+
 
 
                 setSortToFavorite();
@@ -335,7 +300,7 @@ public class MainFragment extends Fragment  {
                 if (SelectedSort == favoriteMovies)
                 {
                     String idname = IDDB.get(index);
-                    Log.d("faortited id",index+" : "+ idname);
+
                     Uri uri = Uri.parse(idname);
                     //send movie data goes here
                     ((Callback) getActivity()).onItemSelected(uri);
@@ -349,10 +314,9 @@ public class MainFragment extends Fragment  {
                     String release = movieObjects.get(index).releaseDate;
                     String imageURL = movieObjects.get(index).posterPath;
 
-                    Intent intent = new Intent(getActivity(), DetailActivity.class);
-                    Bundle bundle = new Bundle();
 
-                    Log.d("json before", "before json");
+
+
                     JSONObject json = new JSONObject();
                     try {
                         json.put("movieID", movieID);
@@ -368,11 +332,6 @@ public class MainFragment extends Fragment  {
                         e.printStackTrace();
                     }
 
-//                json.put("uniqueArrays", new JSONArray(items));
-//                String arrayList = json.toString();
-
-                    Log.d("the pressed string", json.toString());
-//               startActivity(intent);
 
 
                 }
@@ -391,13 +350,13 @@ public class MainFragment extends Fragment  {
         mDB=true;
         getMoviesFromDB();
 
-        Toast.makeText(getActivity(), "feh aflam:" +rowNum, Toast.LENGTH_SHORT).show();
+
     }
 
     public void getMoviesFromDB(){
 
         // Projection contains the columns we want
-        String[] projection = new String[]{"id", "mDBID","poster","videos","movie","reviews"};
+        String[] projection = new String[]{"id", "mDBID","movie"};
 
         // Pass the URL, projection and I'll cover the other options below
         Cursor cursor = resolver.query(CONTENT_URL, projection, null, null, null);
@@ -412,19 +371,13 @@ PosterDB.clear();
 IDDB.clear();
             do{
 
-                String id = cursor.getString(cursor.getColumnIndex("id"));
                 movie = cursor.getString(cursor.getColumnIndex("movie"));
                 String idfromdb = cursor.getString(cursor.getColumnIndex("mDBID"));
-                String reviews = cursor.getString(cursor.getColumnIndex("reviews"));
-//                String Posterfromdb = cursor.getString(cursor.getColumnIndex("poster"));
-                byte[] blov = cursor.getBlob(cursor.getColumnIndex("poster"));
-                String Posterfromdb = blov.toString();
-                String videos = cursor.getString(cursor.getColumnIndex("videos"));
-                movieList = movieList + idfromdb+" : "+ id + " : "+ reviews + "\n";
+
                 rowNum=rowNum+1;
                 try {
                     JSONObject JSONobj = new JSONObject(movie);
-                    String movieID=  JSONobj.getString("movieID");
+
                     String imageURL=JSONobj.getString("imageURL");
                     IDDB.add(idfromdb);
                     PosterDB.add(imageURL);
@@ -437,7 +390,7 @@ IDDB.clear();
             }while (cursor.moveToNext());
 
         }
-        Log.d("movieDB",movieList);
+
         cursor.close();
 
 
@@ -487,7 +440,7 @@ IDDB.clear();
                 }
 
                 url = new URL(builtUri.toString());
-                Log.d("the url: ", url.toString());
+
                 urlConnection = (HttpsURLConnection) url.openConnection();
                 urlConnection.setRequestMethod("GET");
                 urlConnection.connect();
@@ -510,9 +463,9 @@ IDDB.clear();
                     moviesJsonStr = null;
                 }
                 moviesJsonStr = buffer.toString();
-                Log.v("TASK", "Movies JSON string" + moviesJsonStr);
+
             } catch (IOException e) {
-                Log.e("TASK", "Error", e);
+
                 moviesJsonStr = null;
 
             } finally {
@@ -523,7 +476,7 @@ IDDB.clear();
                     try {
                         reader.close();
                     } catch (final IOException e) {
-                        Log.e("TASK", "Error closing stream", e);
+
                     }
                 }
             }
@@ -561,7 +514,7 @@ IDDB.clear();
             JSONObject movieJson = new JSONObject(moviesJsonStr);
             JSONArray movieArray = movieJson.getJSONArray("results");
             ArrayList<MovieObject> arrayOfMovies = new ArrayList<>();
-            Log.d("TASK", movieJson.toString());
+
             int numberOfMovies = movieArray.length();
             for (int i = 0; i < numberOfMovies; i++) {
                 JSONObject movie = movieArray.getJSONObject(i);
