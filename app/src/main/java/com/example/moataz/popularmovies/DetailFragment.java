@@ -1,7 +1,9 @@
 package com.example.moataz.popularmovies;
 
+import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -9,6 +11,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.method.ScrollingMovementMethod;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -46,6 +49,10 @@ import javax.net.ssl.HttpsURLConnection;
  */
 public class DetailFragment extends Fragment {
 
+    public interface onUnFavUpdate {
+
+        public void onMovieUnFav();
+    }
 
     ListView listView;
     TextView reviewTextView;
@@ -58,7 +65,7 @@ public class DetailFragment extends Fragment {
     static final String gotdatafromargs="args ddata is here";
 
 
-
+    Activity mActivity;
     ContentResolver resolver;
     JSONObject JSONobj;
     StringBuilder allTheReviews;
@@ -70,8 +77,6 @@ public class DetailFragment extends Fragment {
     String imageURL;
     ImageView posterImageView;
     ContentValues values;
-    JSONObject jsonvid;
-    String videoArrayJSON;
     TextView titleTextView;
     TextView overviewTextView;
     TextView ratingTextView;
@@ -81,6 +86,7 @@ public class DetailFragment extends Fragment {
     Uri mUri;
     String theURI;
     ArrayList<String> videokeyArray;
+    Boolean isOnePane;
 
     public DetailFragment() {
     }
@@ -88,6 +94,7 @@ public class DetailFragment extends Fragment {
     @Override
     public void onSaveInstanceState(Bundle outState) {
        outState.putParcelable("theUri", mUri);
+        outState.putBoolean("isOnePAne",isOnePane);
 
 
         super.onSaveInstanceState(outState);
@@ -101,9 +108,9 @@ public class DetailFragment extends Fragment {
         Bundle arguments = getArguments();
         if (savedInstanceState != null ) {
 
+            isOnePane = savedInstanceState.getBoolean("isOnePAne");
            Uri uri = savedInstanceState.getParcelable("theUri");
             if (uri != null) {
-//                theURI = uri.toString();
 
                 setHasOptionsMenu(true);
                 if (arguments != null) {
@@ -120,8 +127,10 @@ else {
                         mUri = arguments.getParcelable(DetailFragment.gotdatafromargs);
                         theURI =   mUri.toString();
                    setHasOptionsMenu(true);
-
-
+                isOnePane = getArguments().getBoolean("phone");
+                if(isOnePane)
+                    Log.d("detailFrag","from phone");
+                else Log.d("detailFrag","from tablet");
 
   }
 
@@ -272,8 +281,6 @@ public void setMovieData(){
         }
 
 
-
-
             favorite.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -282,8 +289,11 @@ public void setMovieData(){
                         v.setSelected(false);
                         Toast.makeText(getActivity(), "Removed from favorites", Toast.LENGTH_SHORT).show();
 
-                        resolver.delete(CONTENT_URL,
-                                "mDBID = ? ", new String[]{movieID});
+                        deleteMovie();
+                        if(!isOnePane){
+                        if (!lookupMovies(movieID)) {
+                            ((onUnFavUpdate) getActivity()).onMovieUnFav();
+                        }}
 
 
                     } else {
@@ -292,9 +302,13 @@ public void setMovieData(){
                         values = new ContentValues();
                         values.put("movie", JSONobj.toString());
                         values.put("mDBID", movieID);
-                        videoArrayJSON = jsonvid.toString();
+
                         resolver.insert(CONTENT_URL, values);
                         v.setSelected(true);
+
+                        if(!isOnePane){
+                            ((onUnFavUpdate) getActivity()).onMovieUnFav();}
+
                     }
 
 
@@ -306,7 +320,16 @@ public void setMovieData(){
         return rootView;
     }
 
+    public void deleteMovie(){
+        resolver.delete(CONTENT_URL,
+                "mDBID = ? ", new String[]{movieID});
+    }
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        mActivity  = getActivity();
 
+    }
     public void setMovieDataViews(){
 
 
@@ -493,18 +516,7 @@ public void setMovieData(){
                     mVideosAdapter.clear();
                     mVideosAdapter.addAll(videoNAme);
 
-                    try {
-                        jsonvid = new JSONObject();
-                        jsonvid.put("videoNameArray", new JSONArray(videoNAme));
-                        jsonvid.put("videoKeyArray", new JSONArray(videokeyArray));
 
-
-
-
-
-                    } catch (Exception e){
-                        e.printStackTrace();
-                    }
 
 
 

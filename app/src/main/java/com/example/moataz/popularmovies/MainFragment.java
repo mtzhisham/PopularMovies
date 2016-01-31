@@ -13,6 +13,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -70,10 +71,10 @@ public class MainFragment extends Fragment  {
     ContentResolver resolver;
 
     /**
-     +     * A callback interface that all activities containing this fragment must
-     +     * implement. This mechanism allows activities to be notified of item
-     +     * selections.
-     +     */
+          * A callback interface that all activities containing this fragment must
+          * implement. This mechanism allows activities to be notified of item
+          * selections.
+          */
         public interface Callback {
                 /**
                  * DetailFragmentCallback for when an item has been selected.
@@ -141,9 +142,8 @@ public class MainFragment extends Fragment  {
     public void drawPostersDB(){
 
         customMoviesAdapter.clear();
-        customMoviesAdapter.notifyDataSetChanged();
         customMoviesAdapter.addAll(PosterDB);
-
+        customMoviesAdapter.notifyDataSetChanged();
 
     }
 
@@ -151,7 +151,7 @@ public class MainFragment extends Fragment  {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(false);
-
+        resolver = getActivity().getContentResolver();
         if(isOnline()) {
 
 
@@ -171,19 +171,16 @@ public class MainFragment extends Fragment  {
 
                     }
                 });
-            } else if(savedInstanceState.containsKey("moviesDB")){
+            } else{
 
                 PosterDB = savedInstanceState.getStringArrayList("PosterDB");
                 IDDB   = savedInstanceState.getStringArrayList("IDDB");
 
-
+                Log.d("da5el","yes 5alahom");
                 final Handler handler = new Handler();
                 handler.post(new Runnable() {
 
                     public void run() {
-
-                        SelectedSort = favoriteMovies;
-
                         setSortToFavorite();
                         drawPostersDB();
 
@@ -194,20 +191,16 @@ public class MainFragment extends Fragment  {
 
     }
 
-
-
-
-
-
-
-
-
+    @Override
+    public void onResume() {
+        super.onResume();
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        resolver = getActivity().getContentResolver();
+
 
         rootView = inflater.inflate(R.layout.fragment_main, container, false);
         customMoviesAdapter = new CustomMoviesAdapter(getContext(),new ArrayList<String>());
@@ -364,11 +357,11 @@ public class MainFragment extends Fragment  {
         String movieList = "";
         rowNum = 0;
         String movie="";
-
+        PosterDB.clear();
+        IDDB.clear();
         // Cycle through and display every row of data
         if(cursor.moveToFirst()){
-PosterDB.clear();
-IDDB.clear();
+
             do{
 
                 movie = cursor.getString(cursor.getColumnIndex("movie"));
@@ -381,6 +374,7 @@ IDDB.clear();
                     String imageURL=JSONobj.getString("imageURL");
                     IDDB.add(idfromdb);
                     PosterDB.add(imageURL);
+                    Log.d("main","why");
 
                 } catch (Exception e)
                 {e.printStackTrace();}

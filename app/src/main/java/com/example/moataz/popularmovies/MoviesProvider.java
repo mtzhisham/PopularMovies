@@ -45,7 +45,7 @@ public class MoviesProvider extends ContentProvider {
     private SQLiteDatabase sqlDB;
     static final String DATABASE_NAME = "favMovies";
     static final String TABLE_NAME = "userFav";
-    static final int DATABASE_VERSION = 19;
+    static final int DATABASE_VERSION = 20;
     static final String CREATE_DB_TABLE = " CREATE TABLE " + TABLE_NAME
             + " (id INTEGER PRIMARY KEY AUTOINCREMENT, "
             +    "mDBID TEXT NOT NULL, "

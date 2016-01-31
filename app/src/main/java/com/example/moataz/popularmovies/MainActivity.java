@@ -4,10 +4,12 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 
-public class MainActivity extends AppCompatActivity  implements MainFragment.Callback {
+public class MainActivity extends AppCompatActivity  implements MainFragment.Callback,DetailFragment.onUnFavUpdate {
     private static final String DETAILFRAGMENT_TAG = "DFTAG";
     private boolean mTwoPane;
+
 
     public void onSaveInstanceState(Bundle outState) {
         outState.putInt("true", 1);
@@ -37,6 +39,7 @@ public class MainActivity extends AppCompatActivity  implements MainFragment.Cal
             mTwoPane = false;
 
 
+
         }
     }
 
@@ -44,6 +47,8 @@ public class MainActivity extends AppCompatActivity  implements MainFragment.Cal
 
     @Override
     public void onItemSelected(Uri msg) {
+
+
 
         if (mTwoPane) {
 
@@ -58,9 +63,47 @@ public class MainActivity extends AppCompatActivity  implements MainFragment.Cal
                     .commit();
 
         } else {
+
             Intent intent = new Intent(this, DetailActivity.class).setData(msg);
+            intent.putExtra("phone",true);
             startActivity(intent);
 
         }
     }
+
+    @Override
+    public void onMovieUnFav() {
+        updateUI();
+    }
+
+
+    public void updateUI(){
+
+        if(mTwoPane) {
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    MainFragment mainFragment = (MainFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_main);
+
+
+                    if (mainFragment.mDB) {
+                        mainFragment.getMoviesFromDB();
+                        mainFragment.drawPostersDB();
+                        Log.d("mainA", "omal feh eh");
+                    }
+                }
+            });
+
+
+        }
+else Log.d("mainA", "nothing to do here");
+
+        }
+
+
+
+
+
+
 }
