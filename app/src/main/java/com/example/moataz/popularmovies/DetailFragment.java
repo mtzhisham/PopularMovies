@@ -10,6 +10,8 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.view.MenuItemCompat;
+import android.support.v7.widget.ShareActionProvider;
 import android.text.method.ScrollingMovementMethod;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -42,6 +44,8 @@ import java.net.URL;
 import java.util.ArrayList;
 
 import javax.net.ssl.HttpsURLConnection;
+
+
 
 /**
  * A placeholder fragment containing a simple view.
@@ -85,7 +89,14 @@ public class DetailFragment extends Fragment {
     Uri mUri;
     String theURI;
     ArrayList<String> videokeyArray;
-    Boolean isOnePane;
+    Boolean isOnePane=false;
+    Intent myShareIntent;
+    ShareActionProvider myShareActionProvider;
+    String urlStr;
+    ArrayList<String> videoNAme;
+
+
+
 
 
     public DetailFragment() {
@@ -129,6 +140,7 @@ else {
                         mUri = arguments.getParcelable(DetailFragment.gotdatafromargs);
                         theURI =   mUri.toString();
                    setHasOptionsMenu(true);
+                //
                 isOnePane = getArguments().getBoolean("phone");
 
 
@@ -148,7 +160,7 @@ public void setMovieData(){
     movieID = theURI;
     if (movieID!= null){
 
-    if ( lookupMovies(movieID)){
+    if (lookupMovies(movieID)){
 
         try {
             JSONobj = new JSONObject(movieFromFavorie);
@@ -166,7 +178,11 @@ public void setMovieData(){
                catch(Exception e){
                 e.printStackTrace();
             }
+        FetchTrailerTask trilerVideosTask = new FetchTrailerTask();
+        FetchTrailerTask trileReviewsTask = new FetchTrailerTask();
 
+        trilerVideosTask.execute(movieID, "videos");
+        trileReviewsTask.execute(movieID, "reviews");
 
         }
 
@@ -189,14 +205,36 @@ public void setMovieData(){
             e.printStackTrace();
         }
 
-    }}
     }
+        FetchTrailerTask trilerVideosTask = new FetchTrailerTask();
+        FetchTrailerTask trileReviewsTask = new FetchTrailerTask();
+
+        trilerVideosTask.execute(movieID, "videos");
+        trileReviewsTask.execute(movieID, "reviews");
+
+    }
+
+
+
+
+
+}
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         menu.clear();
         inflater.inflate(R.menu.menu_detail, menu);
+        MenuItem shareItem = menu.findItem(R.id.action_share);
+        myShareActionProvider =
+                (ShareActionProvider) MenuItemCompat.getActionProvider(shareItem);
+        myShareIntent = new Intent(Intent.ACTION_SEND);
+        myShareIntent.setType("text/plain");
+
+       if (isOnePane) {
+           myShareIntent.putExtra(Intent.EXTRA_TEXT, urlStr);
+       }
+        myShareActionProvider.setShareIntent(myShareIntent);
     }
 
 
@@ -204,27 +242,10 @@ public void setMovieData(){
 
 
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-
-        int id = item.getItemId();
-
-
-        if (id == R.id.action_share) {
-
-
-            String videokey = videokeyArray.get(0);
-            final String urlStr = "http://www.youtube.com/watch?v="+videokey;
-            Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setData(Uri.parse(urlStr));
-            startActivity(intent);
-        }
-
-        return super.onOptionsItemSelected(item);
 
 
 
-    }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -264,7 +285,9 @@ public void setMovieData(){
 
                  posterImageView = (ImageView) rootView.findViewById(R.id.poster_imageView);
         listView.setAdapter(mVideosAdapter);
+
         reviewTextView.setMovementMethod(new ScrollingMovementMethod());
+
 
         if(movieID != null){
 
@@ -279,6 +302,11 @@ public void setMovieData(){
 
         }
             setMovieDataViews();
+
+
+
+
+
 
         }
 
@@ -336,17 +364,8 @@ public void setMovieData(){
     }
     public void setMovieDataViews(){
 
-
-
         favorite.setVisibility(View.VISIBLE);
-        FetchTrailerTask trilerVideosTask = new FetchTrailerTask();
-        FetchTrailerTask trileReviewsTask = new FetchTrailerTask();
-
-        trilerVideosTask.execute(movieID, "videos");
-        trileReviewsTask.execute(movieID, "reviews");
-
         titleTextView.setText(title);
-
         overviewTextView.setText(overview);
         ratingTextView.setText(rating);
         releaseDateTextView.setText(release);
@@ -357,6 +376,7 @@ public void setMovieData(){
                 .fit()
                 .tag(getActivity())
                 .into(posterImageView);
+
     }
 
 
@@ -507,7 +527,7 @@ public void setMovieData(){
 
                     int trailerCount = trailerObjects.size();
                     final ArrayList<TrailerObject> videoArray= new ArrayList<>();
-                    ArrayList<String> videoNAme = new ArrayList<>();
+                    videoNAme = new ArrayList<>();
                     videokeyArray = new ArrayList<>();
 
 
@@ -520,6 +540,9 @@ public void setMovieData(){
                     }}
                     mVideosAdapter.clear();
                     mVideosAdapter.addAll(videoNAme);
+                    yTVideo();
+
+
 
 
 
@@ -543,7 +566,6 @@ public void setMovieData(){
                     makeMyScrollSmart(reviewTextView);
                 }
 
-                yTVideo();
 
 
 
@@ -569,6 +591,11 @@ public void setMovieData(){
 
                 }
             });
+            String videokey = videokeyArray.get(0);
+            String videoName= videoNAme.get(0);
+            urlStr = title +": "+ videoName+" - " + "http://www.youtube.com/watch?v="+videokey +" #PopularMovies ";
+
+
         }
 
         private ArrayList getTrailerDataFromJson(String trailerJsonStr) throws JSONException {

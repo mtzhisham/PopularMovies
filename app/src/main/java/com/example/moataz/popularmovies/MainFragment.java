@@ -13,7 +13,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -62,7 +61,9 @@ public class MainFragment extends Fragment  {
     String SelectedCount=defaultUserCount;
     int rowNum;
    boolean mDB = false;
-    boolean hasConnection=true;
+    static final String STATE_SCROLL_POSITION = "scrollPosition";
+    int savedPosition = 0;
+
      final Uri CONTENT_URL =
             Uri.parse("content://com.example.moataz.popularmovies.MoviesProvider/cpmovies");
 
@@ -99,8 +100,16 @@ public class MainFragment extends Fragment  {
         outState.putParcelableArrayList("movies", movieObjects);
 
 
+
+    }
+
+        if (gv != null){//check if the GridView instantiate first
+            int currentPosition = gv.getFirstVisiblePosition();
+            outState.putInt(STATE_SCROLL_POSITION,currentPosition);
+        }
+
         super.onSaveInstanceState(outState);
-    }}
+    }
 
     public boolean isOnline() {
         ConnectivityManager cm = (ConnectivityManager)
@@ -148,16 +157,19 @@ public class MainFragment extends Fragment  {
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(false);
         resolver = getActivity().getContentResolver();
-        if(isOnline()) {
+        if(savedInstanceState == null) {
 
 
-            if (savedInstanceState == null ) {
+            if (isOnline()) {
                 FetchMoviesTask fetchMovies = new FetchMoviesTask();
                 fetchMovies.execute();
+
+            }
+
 
 
             } else if(savedInstanceState.containsKey("movies")) {
@@ -166,12 +178,13 @@ public class MainFragment extends Fragment  {
                 handler.post(new Runnable() {
 
                     public void run() {
-//                    FetchMoviesTask fetchMovies = new FetchMoviesTask();
+
                         drawPosters();
+                        gv.setSelection(savedInstanceState.getInt(STATE_SCROLL_POSITION));
 
                     }
                 });
-            } else{
+            } else if (savedInstanceState.containsKey("moviesDB")){
 
                 PosterDB = savedInstanceState.getStringArrayList("PosterDB");
                 IDDB   = savedInstanceState.getStringArrayList("IDDB");
@@ -183,20 +196,25 @@ public class MainFragment extends Fragment  {
                     public void run() {
                         setSortToFavorite();
                         drawPostersDB();
+                        gv.setSelection(savedInstanceState.getInt(STATE_SCROLL_POSITION));
 
                     }
                 });
             }
+
+
+
         }
 
-    }
+
+
 
     @Override
     public void onResume() {
-        if (mDB){
-            if(!IDDB.isEmpty())
+        if (mDB){//handles the back button on phone
+            if(!IDDB.isEmpty()){
             getMoviesFromDB();
-            drawPostersDB();
+            drawPostersDB();}
         }
 
         super.onResume();
@@ -212,6 +230,7 @@ public class MainFragment extends Fragment  {
         customMoviesAdapter = new CustomMoviesAdapter(getContext(),new ArrayList<String>());
         gv = (GridView) rootView.findViewById(R.id.movies_grid);
         gv.setAdapter(customMoviesAdapter);
+        gv.setSelection(savedPosition);
 
 
 
@@ -255,7 +274,9 @@ public class MainFragment extends Fragment  {
                    if (isOnline()) {
                        FetchMoviesTask fetchMovies = new FetchMoviesTask();
                        fetchMovies.execute();
+                       gv.setSelection(0);
                    }
+
                     menu.close(true);
                 }
             });
@@ -265,9 +286,11 @@ public class MainFragment extends Fragment  {
                     mDB=false;
                     SelectedSort = highestRateMovies;
                     SelectedCount = userCount;
+
                     if (isOnline()) {
                         FetchMoviesTask fetchMovies = new FetchMoviesTask();
                         fetchMovies.execute();
+                        gv.setSelection(0);
                     }
                     menu.close(true);
                 }
@@ -281,6 +304,7 @@ public class MainFragment extends Fragment  {
                 setSortToFavorite();
                 drawPostersDB();
                 menu.close(true);
+                gv.setSelection(0);
             }
         });
 
