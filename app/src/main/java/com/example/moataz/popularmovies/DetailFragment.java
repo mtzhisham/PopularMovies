@@ -11,7 +11,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.method.ScrollingMovementMethod;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -88,13 +87,15 @@ public class DetailFragment extends Fragment {
     ArrayList<String> videokeyArray;
     Boolean isOnePane;
 
+
     public DetailFragment() {
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
        outState.putParcelable("theUri", mUri);
-        outState.putBoolean("isOnePAne",isOnePane);
+        outState.putBoolean("isOnePAne", isOnePane);
+
 
 
         super.onSaveInstanceState(outState);
@@ -109,6 +110,7 @@ public class DetailFragment extends Fragment {
         if (savedInstanceState != null ) {
 
             isOnePane = savedInstanceState.getBoolean("isOnePAne");
+
            Uri uri = savedInstanceState.getParcelable("theUri");
             if (uri != null) {
 
@@ -128,9 +130,7 @@ else {
                         theURI =   mUri.toString();
                    setHasOptionsMenu(true);
                 isOnePane = getArguments().getBoolean("phone");
-                if(isOnePane)
-                    Log.d("detailFrag","from phone");
-                else Log.d("detailFrag","from tablet");
+
 
   }
 
@@ -144,6 +144,7 @@ else {
 
 public void setMovieData(){
 
+    ;
     movieID = theURI;
     if (movieID!= null){
 
@@ -159,6 +160,7 @@ public void setMovieData(){
             overview = JSONobj.getString("overview");
             rating = JSONobj.getString("rating");
             imageURL = JSONobj.getString("imageURL");
+
 
             }
                catch(Exception e){
@@ -323,6 +325,8 @@ public void setMovieData(){
     public void deleteMovie(){
         resolver.delete(CONTENT_URL,
                 "mDBID = ? ", new String[]{movieID});
+
+
     }
     @Override
     public void onAttach(Context context) {
@@ -331,6 +335,7 @@ public void setMovieData(){
 
     }
     public void setMovieDataViews(){
+
 
 
         favorite.setVisibility(View.VISIBLE);

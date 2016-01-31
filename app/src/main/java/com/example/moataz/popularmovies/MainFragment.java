@@ -176,7 +176,7 @@ public class MainFragment extends Fragment  {
                 PosterDB = savedInstanceState.getStringArrayList("PosterDB");
                 IDDB   = savedInstanceState.getStringArrayList("IDDB");
 
-                Log.d("da5el","yes 5alahom");
+
                 final Handler handler = new Handler();
                 handler.post(new Runnable() {
 
@@ -193,6 +193,12 @@ public class MainFragment extends Fragment  {
 
     @Override
     public void onResume() {
+        if (mDB){
+            if(!IDDB.isEmpty())
+            getMoviesFromDB();
+            drawPostersDB();
+        }
+
         super.onResume();
     }
 
@@ -242,7 +248,7 @@ public class MainFragment extends Fragment  {
             programFab1.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-
+                    mDB=false;
                     SelectedSort = popMovies;
                     SelectedCount = defaultUserCount;
 
@@ -256,7 +262,7 @@ public class MainFragment extends Fragment  {
             programFab2.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-
+                    mDB=false;
                     SelectedSort = highestRateMovies;
                     SelectedCount = userCount;
                     if (isOnline()) {
@@ -374,7 +380,7 @@ public class MainFragment extends Fragment  {
                     String imageURL=JSONobj.getString("imageURL");
                     IDDB.add(idfromdb);
                     PosterDB.add(imageURL);
-                    Log.d("main","why");
+
 
                 } catch (Exception e)
                 {e.printStackTrace();}

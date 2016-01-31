@@ -90,14 +90,14 @@ public class MainActivity extends AppCompatActivity  implements MainFragment.Cal
                     if (mainFragment.mDB) {
                         mainFragment.getMoviesFromDB();
                         mainFragment.drawPostersDB();
-                        Log.d("mainA", "omal feh eh");
+
                     }
                 }
             });
 
 
         }
-else Log.d("mainA", "nothing to do here");
+
 
         }
 

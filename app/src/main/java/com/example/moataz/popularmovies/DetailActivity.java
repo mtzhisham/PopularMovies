@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 
 public class DetailActivity extends AppCompatActivity  {
     boolean value;
@@ -20,9 +19,6 @@ public class DetailActivity extends AppCompatActivity  {
             //already two pane
             if (extras != null){
                 value = extras.getBoolean("phone"); //two pane set to fasle
-                if(value)
-                    Log.d("DetailA","phone");
-                else  Log.d("DetailA","tablet");
 
             }
 
