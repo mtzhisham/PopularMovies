@@ -591,11 +591,13 @@ public void setMovieData(){
 
                 }
             });
-            String videokey = videokeyArray.get(0);
-            String videoName= videoNAme.get(0);
-            urlStr = title +": "+ videoName+" - " + "http://www.youtube.com/watch?v="+videokey +" #PopularMovies ";
 
+            if (!videokeyArray.isEmpty()) {
+                String videokey = videokeyArray.get(0);
+                String videoName = videoNAme.get(0);
+                urlStr = title + ": " + videoName + " - " + "http://www.youtube.com/watch?v=" + videokey + " #PopularMovies ";
 
+            }
         }
 
         private ArrayList getTrailerDataFromJson(String trailerJsonStr) throws JSONException {
