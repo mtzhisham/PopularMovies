@@ -13,6 +13,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -51,8 +52,8 @@ public class MainFragment extends Fragment  {
     ArrayList<String> moviePosters = new ArrayList<>();
     CustomMoviesAdapter customMoviesAdapter;
     GridView gv;
-    String popMovies = "popularity.desc";
-    String highestRateMovies = "vote_average.desc";
+    String popMovies = "popular";
+    String highestRateMovies = "top_rated";
     String SelectedSort = popMovies;
     String favoriteMovies;
     View rootView;
@@ -433,7 +434,7 @@ public class MainFragment extends Fragment  {
         Uri TrailerBuiltUri;
         Uri trailerUrl;
 
-        final String TRAILER_BASE_URL = "http://api.themoviedb.org/3/movie/";
+//        final String TRAILER_BASE_URL = "http://api.themoviedb.org/3/movie/";
 
 
 
@@ -444,26 +445,32 @@ public class MainFragment extends Fragment  {
             String moviesJsonStr = null;
 
             try {
-                final String MOVIE_BASE_URL = "https://api.themoviedb.org/3/discover/movie?";
 
-                final String SORT_BY_PARAM = "sort_by";
+
+
                 final String APIKEY_PARAM = "api_key";
+
                 if (SelectedCount.equals(defaultUserCount)) {
+
+                    final String MOVIE_BASE_URL = "https://api.themoviedb.org/3/movie/popular?";
+
                     builtUri = Uri.parse(MOVIE_BASE_URL).buildUpon()
-                            .appendQueryParameter(SORT_BY_PARAM, SelectedSort)
                             .appendQueryParameter(APIKEY_PARAM, BuildConfig.MOVIE_DATABASE_APIKEY)
                             .build();
+
 
                 }
                 else {
+                    final String MOVIE_BASE_URL = "https://api.themoviedb.org/3/movie/top_rated?";
                     builtUri = Uri.parse(MOVIE_BASE_URL).buildUpon()
-                            .appendQueryParameter(SORT_BY_PARAM, SelectedSort)
-                            .appendQueryParameter(SORT_BY_PARAM, SelectedCount)
                             .appendQueryParameter(APIKEY_PARAM, BuildConfig.MOVIE_DATABASE_APIKEY)
                             .build();
+
                 }
 
                 url = new URL(builtUri.toString());
+
+
 
                 urlConnection = (HttpsURLConnection) url.openConnection();
                 urlConnection.setRequestMethod("GET");
